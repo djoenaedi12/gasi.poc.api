@@ -12,11 +12,19 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Logs a startup summary for loaded PF4J plugins.
+ *
+ * @since 1.0.0
  */
 @Configuration
 public class PluginStartupLogger {
 
     private static final Logger LOG = LoggerFactory.getLogger(PluginStartupLogger.class);
+
+    /**
+     * Creates the plugin startup logger configuration.
+     */
+    public PluginStartupLogger() {
+    }
 
     /**
      * Creates a startup logger.

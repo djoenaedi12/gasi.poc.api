@@ -4,11 +4,15 @@ import java.util.List;
 import org.pf4j.Extension;
 
 import gasi.gps.core.api.extension.AppExtension;
+import lombok.NoArgsConstructor;
 
 /**
  * Registers the basic information of plugin data-upload-plugin to the core application.
+ *
+ * @since 1.0.0
  */
 @Extension
+@NoArgsConstructor
 public class DataUploadAppExtension implements AppExtension {
 
     @Override

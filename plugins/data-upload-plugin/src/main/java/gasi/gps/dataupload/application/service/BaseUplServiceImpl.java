@@ -70,6 +70,18 @@ public abstract class BaseUplServiceImpl
     private final DataUplProcessorRegistry processorRegistry;
     private final FileReaderRegistry fileReaderRegistry;
 
+    /**
+     * Creates a base upload service implementation.
+     *
+     * @param dataUplRepositoryPort    upload batch repository
+     * @param dataRowUplRepositoryPort upload row repository
+     * @param dataUplDtoMapper         upload batch DTO mapper
+     * @param dataRowUplDtoMapper      upload row DTO mapper
+     * @param processorRegistry        resource processor registry
+     * @param fileReaderRegistry       file reader registry
+     * @param messageUtil              message resolver
+     * @param idEncoder                encoded ID codec
+     */
     protected BaseUplServiceImpl(DataUplRepositoryPort dataUplRepositoryPort,
             DataRowUplRepositoryPort dataRowUplRepositoryPort,
             DataUplDtoMapper dataUplDtoMapper,

@@ -35,19 +35,27 @@ import gasi.gps.core.starter.infrastructure.entity.BaseEntity;
  * - #{#paramName} — reference method parameters
  * - #{#result.field} — reference return value fields
  * </p>
+ *
+ * @since 1.0.0
  */
 @Aspect
 @Component
 @Order(2)
 public class AuditMethodAspect {
 
-    private static final Logger log = LoggerFactory.getLogger(AuditMethodAspect.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuditMethodAspect.class);
 
     private final AuditLogRepositoryPort repository;
     private final SecurityContextProvider securityContextUtil;
     private final ExpressionParser spelParser = new SpelExpressionParser();
     private final DefaultParameterNameDiscoverer paramDiscoverer = new DefaultParameterNameDiscoverer();
 
+    /**
+     * Creates the method-level audit aspect.
+     *
+     * @param repository          audit log repository
+     * @param securityContextUtil current security context provider
+     */
     public AuditMethodAspect(AuditLogRepositoryPort repository, SecurityContextProvider securityContextUtil) {
         this.repository = repository;
         this.securityContextUtil = securityContextUtil;
@@ -60,6 +68,13 @@ public class AuditMethodAspect {
         return null;
     }
 
+    /**
+     * Writes a successful method-level audit log after an audited method returns.
+     *
+     * @param joinPoint join point for the audited method
+     * @param auditable method-level audit annotation
+     * @param result    returned value from the audited method
+     */
     @AfterReturning(pointcut = "@annotation(auditable)", returning = "result")
     public void audit(JoinPoint joinPoint, Auditable auditable, Object result) {
         // Nested call control
@@ -90,7 +105,7 @@ public class AuditMethodAspect {
                     .build());
 
         } catch (Exception e) {
-            log.error("Failed to write audit log", e);
+            LOG.error("Failed to write audit log", e);
         } finally {
             if (isRoot) {
                 AuditContext.clear();
@@ -98,6 +113,13 @@ public class AuditMethodAspect {
         }
     }
 
+    /**
+     * Writes a failed method-level audit log when an audited method throws.
+     *
+     * @param joinPoint join point for the audited method
+     * @param auditable method-level audit annotation
+     * @param ex        thrown exception
+     */
     @AfterThrowing(pointcut = "@annotation(auditable)", throwing = "ex")
     public void auditFailure(JoinPoint joinPoint, Auditable auditable, Exception ex) {
         try {
@@ -112,7 +134,7 @@ public class AuditMethodAspect {
                     .createdAt(Instant.now())
                     .build());
         } catch (Exception logEx) {
-            log.error("Failed to write audit failure log", logEx);
+            LOG.error("Failed to write audit failure log", logEx);
         }
     }
 
@@ -155,7 +177,7 @@ public class AuditMethodAspect {
             }
             return resolved;
         } catch (Exception e) {
-            log.warn("Failed to resolve SpEL in audit description: {}", template, e);
+            LOG.warn("Failed to resolve SpEL in audit description: {}", template, e);
             return template;
         }
     }

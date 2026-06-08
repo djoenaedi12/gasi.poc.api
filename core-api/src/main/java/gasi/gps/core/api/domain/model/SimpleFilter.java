@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 /**
  * Filter expression for a single searchable field.
@@ -17,16 +16,29 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class SimpleFilter extends GenericFilter {
+
+    /** Public API field name to filter. */
     private String field;
+
+    /** Operator applied to the field value. */
     private FilterOperator operator;
+
+    /** Comparison value for operators that require one. */
     private Object value;
 
     /**
+     * Creates an empty simple filter.
+     */
+    public SimpleFilter() {
+    }
+
+    /**
      * Supported operators for {@link SimpleFilter}.
+     *
+     * @since 1.0.0
      */
     public enum FilterOperator {
         /** Field value must equal {@code value}. */

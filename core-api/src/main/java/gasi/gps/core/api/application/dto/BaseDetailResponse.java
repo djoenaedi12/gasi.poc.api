@@ -5,7 +5,6 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -18,13 +17,25 @@ import lombok.experimental.SuperBuilder;
  */
 @Data
 @SuperBuilder(toBuilder = true)
-@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public abstract class BaseDetailResponse extends BaseSummaryResponse {
 
+    /** Timestamp when the resource was last updated. */
     private Instant updatedAt;
+
+    /** User or system actor that created the resource. */
     private String createdBy;
+
+    /** User or system actor that last updated the resource. */
     private String updatedBy;
+
+    /** Optimistic locking version. */
     private Integer version;
+
+    /**
+     * Creates an empty base detail response.
+     */
+    protected BaseDetailResponse() {
+    }
 }

@@ -28,6 +28,12 @@ import gasi.gps.core.api.file.FileRow;
 @Component
 public class CsvFileReader implements FileReader {
 
+    /**
+     * Creates a CSV file reader.
+     */
+    public CsvFileReader() {
+    }
+
     @Override
     public Set<String> extensions() {
         return Set.of("csv");

@@ -55,6 +55,12 @@ public class PluginFlywayConfig {
     private static final String PLATFORM_MIGRATION_LOCATION = "classpath:db/migration/platform";
 
     /**
+     * Creates the plugin Flyway configuration.
+     */
+    public PluginFlywayConfig() {
+    }
+
+    /**
      * Creates a {@link CommandLineRunner} that executes Flyway migrations from
      * all registered locations using a composite plugin classloader.
      *

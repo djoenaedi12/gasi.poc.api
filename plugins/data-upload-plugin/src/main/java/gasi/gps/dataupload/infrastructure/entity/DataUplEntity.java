@@ -15,6 +15,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * JPA entity for upload batch metadata.
+ *
+ * @since 1.0.0
+ */
 @Data
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor

@@ -2,6 +2,7 @@ package gasi.gps.core.starter.application.service;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import gasi.gps.core.api.application.dto.VersionedRequest;
 import gasi.gps.core.api.application.exception.EntityNotFoundException;
 import gasi.gps.core.api.domain.model.BaseModel;
 import gasi.gps.core.api.domain.port.inbound.BaseService;
@@ -66,6 +67,9 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageUtil.get("error.entity.notFound", resourceType(), idEncoder.encode(id))));
         mapper.updateDomain(request, existing);
+        if (request instanceof VersionedRequest vr) {
+            existing.setVersion(vr.getVersion());
+        }
         beforeUpdate(existing, request);
         D saved = repositoryPort.save(existing);
         afterUpdate(saved, request);

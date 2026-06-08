@@ -173,25 +173,37 @@ public abstract class BaseReadController<SRS, DRS> {
     public ApiResponse<PageResult<?>> findAllPaged(
             @RequestBody SearchRequest request) {
         PageResult<SRS> result = service.findAll(
-                request.getPage() != null ? request.getPage() : 0,
-                request.getSize() != null ? request.getSize() : 10,
+                request.normalizedPage(),
+                request.normalizedSize(),
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
         return ApiResponse.ok(ResponseProjection.projectPage(result, resolveProjectionFields(request)));
     }
 
+    /**
+     * Finds lookup rows with pagination and lookup-specific projection defaults.
+     *
+     * @param request the search request containing filter, sort, pagination,
+     *                and optional projection fields
+     * @return a projected page of lookup rows wrapped in {@link ApiResponse}
+     */
     @PostMapping("/lookup/search/page")
     @PreAuthorize("hasPermission(this, 'LOOKUP')")
     public ApiResponse<PageResult<?>> lookupPaged(@RequestBody SearchRequest request) {
         PageResult<SRS> result = service.findAll(
-                request.getPage() != null ? request.getPage() : 0,
-                request.getSize() != null ? request.getSize() : 10,
+                request.normalizedPage(),
+                request.normalizedSize(),
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
 
         return ApiResponse.ok(ResponseProjection.projectPage(result, resolveLookupFields(request)));
     }
 
+    /**
+     * Default response projection for lookup endpoints when callers omit fields.
+     *
+     * @return default public DTO field names for lookup responses
+     */
     protected List<String> getDefaultLookupFields() {
         return getDefaultSummaryFields();
     }

@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 /**
  * Filter expression that combines child filters with logical OR.
@@ -18,9 +17,16 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class OrFilter extends GenericFilter {
+
+    /** Child filter expressions where at least one must match. */
     private List<GenericFilter> filters;
+
+    /**
+     * Creates an empty OR filter.
+     */
+    public OrFilter() {
+    }
 }

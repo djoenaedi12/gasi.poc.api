@@ -9,11 +9,22 @@ import gasi.gps.dataupload.infrastructure.entity.DataRowUplEntity;
 import gasi.gps.dataupload.infrastructure.mapper.DataRowUplMapper;
 import gasi.gps.dataupload.infrastructure.persistance.DataRowUplEntityRepository;
 
+/**
+ * Spring Data adapter for upload row persistence.
+ *
+ * @since 1.0.0
+ */
 @Component
 public class DataRowUplRepositoryAdapter
         extends BaseRepositoryAdapter<DataRowUpl, DataRowUplEntity>
         implements DataRowUplRepositoryPort {
 
+    /**
+     * Creates an upload row repository adapter.
+     *
+     * @param repository Spring Data upload row repository
+     * @param mapper     upload row entity mapper
+     */
     public DataRowUplRepositoryAdapter(DataRowUplEntityRepository repository,
             DataRowUplMapper mapper) {
         super(repository, mapper);

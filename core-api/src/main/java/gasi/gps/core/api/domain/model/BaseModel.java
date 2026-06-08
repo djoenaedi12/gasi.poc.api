@@ -4,7 +4,6 @@ import java.time.Instant;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -21,7 +20,6 @@ import lombok.experimental.SuperBuilder;
  */
 @Data
 @SuperBuilder(toBuilder = true)
-@NoArgsConstructor
 @AllArgsConstructor
 public abstract class BaseModel {
     private Long id;
@@ -33,4 +31,10 @@ public abstract class BaseModel {
     private LifecycleStatus lifecycleStatus;
     private Integer version;
     private Long uploadId;
+
+    /**
+     * Creates an empty base model.
+     */
+    protected BaseModel() {
+    }
 }

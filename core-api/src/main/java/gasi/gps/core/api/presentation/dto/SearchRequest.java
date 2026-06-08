@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Request body for search endpoints.
@@ -40,9 +39,17 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 public class SearchRequest {
+    /** Default zero-based page index. */
+    public static final int DEFAULT_PAGE = 0;
+
+    /** Default page size used when the request omits or passes an invalid size. */
+    public static final int DEFAULT_SIZE = 10;
+
+    /** Maximum page size accepted by the API. */
+    public static final int MAX_SIZE = 100;
+
     private GenericFilter filter;
     private List<SortOrder> sorts;
     /**
@@ -53,7 +60,35 @@ public class SearchRequest {
      */
     private List<String> fields;
     @Default
-    private Integer page = 0;
+    private Integer page = DEFAULT_PAGE;
     @Default
-    private Integer size = 10;
+    private Integer size = DEFAULT_SIZE;
+
+    /**
+     * Creates an empty search request.
+     */
+    public SearchRequest() {
+    }
+
+    /**
+     * Returns the requested page normalized to the supported lower bound.
+     *
+     * @return zero-based page index, defaulting to {@link #DEFAULT_PAGE}
+     */
+    public int normalizedPage() {
+        return page == null || page < DEFAULT_PAGE ? DEFAULT_PAGE : page;
+    }
+
+    /**
+     * Returns the requested page size normalized to the supported range.
+     *
+     * @return page size between {@code 1} and {@link #MAX_SIZE}, defaulting to
+     *         {@link #DEFAULT_SIZE}
+     */
+    public int normalizedSize() {
+        if (size == null || size <= 0) {
+            return DEFAULT_SIZE;
+        }
+        return Math.min(size, MAX_SIZE);
+    }
 }

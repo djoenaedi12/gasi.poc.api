@@ -11,6 +11,8 @@ import gasi.gps.platform.infrastructure.classloader.CompositeClassLoader;
 
 /**
  * Boots PF4J before Spring creates the application context.
+ *
+ * @since 1.0.0
  */
 public class PluginBootstrap {
 

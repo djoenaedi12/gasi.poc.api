@@ -20,12 +20,21 @@ import gasi.gps.core.api.extension.AppExtension;
 
 /**
  * Registers Spring components contributed by PF4J plugins at startup.
+ *
+ * @since 1.0.0
  */
 @Component
-public class DynamicPluginComponentScanner implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware, ResourceLoaderAware {
+public class DynamicPluginComponentScanner implements BeanDefinitionRegistryPostProcessor,
+        BeanFactoryAware, ResourceLoaderAware {
 
     private BeanFactory beanFactory;
     private ResourceLoader resourceLoader;
+
+    /**
+     * Creates a dynamic plugin component scanner.
+     */
+    public DynamicPluginComponentScanner() {
+    }
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {

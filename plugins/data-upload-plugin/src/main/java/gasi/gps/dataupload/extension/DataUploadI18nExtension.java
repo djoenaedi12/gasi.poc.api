@@ -4,13 +4,17 @@ import java.util.List;
 import org.pf4j.Extension;
 
 import gasi.gps.core.api.i18n.I18nExtension;
+import lombok.NoArgsConstructor;
 
 /**
  * Registers the i18n basename file for plugin data-upload-plugin.
  *
  * <p>Message file: {@code src/main/resources/classpath:i18n/data-upload/messages_{locale}.properties}.</p>
+ *
+ * @since 1.0.0
  */
 @Extension
+@NoArgsConstructor
 public class DataUploadI18nExtension implements I18nExtension {
 
     @Override

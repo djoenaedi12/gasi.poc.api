@@ -9,6 +9,10 @@
 -->
 <suppressions>
 
+    <!-- Generated sources are owned by annotation processors, not hand-written style rules -->
+    <suppress checks=".*"
+              files=".*target/generated-sources/.*"/>
+
     <!-- Main application class: bootstrap code with higher complexity -->
     <suppress checks="CyclomaticComplexity|MethodLength|ClassFanOutComplexity"
               files="CoreApplication\.java"/>
@@ -16,6 +20,14 @@
     <!-- Configuration classes: wiring code naturally has more dependencies -->
     <suppress checks="ClassFanOutComplexity|ClassDataAbstractionCoupling"
               files=".*Config\.java"/>
+
+    <!-- JPA base entities collect persistence, auditing, and domain annotations -->
+    <suppress checks="ClassFanOutComplexity"
+              files="BaseEntity\.java"/>
+
+    <!-- Central exception handlers naturally reference many exception/response types -->
+    <suppress checks="ClassFanOutComplexity"
+              files="GlobalExceptionHandler\.java"/>
 
     <!-- Spring controllers may have more parameters in handler methods -->
     <suppress checks="ParameterNumber"
@@ -32,5 +44,9 @@
     <!-- Specification: switch over enum operators naturally exceeds complexity limit -->
     <suppress checks="CyclomaticComplexity"
               files="GenericSpecification\.java"/>
+
+    <!-- Small JSON escaping utility: switch branches are explicit by design -->
+    <suppress checks="CyclomaticComplexity|MagicNumber"
+              files="DataUplRowData\.java"/>
 
 </suppressions>

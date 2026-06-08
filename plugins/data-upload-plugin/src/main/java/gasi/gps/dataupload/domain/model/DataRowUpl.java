@@ -7,6 +7,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Domain model for a row within an upload batch.
+ *
+ * @since 1.0.0
+ */
 @Data
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor

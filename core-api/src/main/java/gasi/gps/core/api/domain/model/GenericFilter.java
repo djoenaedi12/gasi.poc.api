@@ -26,4 +26,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public abstract class GenericFilter implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Creates a filter expression base instance.
+     */
+    protected GenericFilter() {
+    }
 }

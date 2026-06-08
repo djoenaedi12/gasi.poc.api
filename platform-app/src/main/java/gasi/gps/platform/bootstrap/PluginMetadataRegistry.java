@@ -9,6 +9,8 @@ import gasi.gps.core.api.extension.AppExtension;
 
 /**
  * Reads plugin metadata exposed through {@link AppExtension}.
+ *
+ * @since 1.0.0
  */
 @Component
 public class PluginMetadataRegistry {
@@ -58,6 +60,7 @@ public class PluginMetadataRegistry {
      * @param description  module description
      * @param version      module version
      * @param basePackages Spring base packages owned by the module
+     * @since 1.0.0
      */
     public record PluginModuleMetadata(
             String name,

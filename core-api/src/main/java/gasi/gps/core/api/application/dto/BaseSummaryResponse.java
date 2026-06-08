@@ -4,7 +4,6 @@ import java.time.Instant;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -17,10 +16,18 @@ import lombok.experimental.SuperBuilder;
  */
 @Data
 @SuperBuilder(toBuilder = true)
-@NoArgsConstructor
 @AllArgsConstructor
 public abstract class BaseSummaryResponse {
 
+    /** Public encoded identifier exposed to API clients. */
     private String id;
+
+    /** Timestamp when the resource was created. */
     private Instant createdAt;
+
+    /**
+     * Creates an empty base summary response.
+     */
+    protected BaseSummaryResponse() {
+    }
 }

@@ -2,6 +2,8 @@ package gasi.gps.platform.bootstrap;
 
 /**
  * Centralized package scan roots used by the platform host.
+ *
+ * @since 1.0.0
  */
 public final class PlatformScanPackages {
 

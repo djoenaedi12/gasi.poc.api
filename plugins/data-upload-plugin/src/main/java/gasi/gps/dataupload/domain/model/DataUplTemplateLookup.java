@@ -10,6 +10,7 @@ import java.util.List;
  * @param rows        reference rows
  * @param valueColumn column key used as submitted value
  * @param labelColumn column key used as human-readable label
+ * @since 1.0.0
  */
 public record DataUplTemplateLookup(
         String sheetName,
@@ -18,6 +19,10 @@ public record DataUplTemplateLookup(
         String valueColumn,
         String labelColumn) {
 
+    /**
+     * Creates lookup metadata and normalizes nullable collections to immutable
+     * empty collections.
+     */
     public DataUplTemplateLookup {
         headers = headers == null ? List.of() : List.copyOf(headers);
         rows = rows == null ? List.of() : rows.stream()

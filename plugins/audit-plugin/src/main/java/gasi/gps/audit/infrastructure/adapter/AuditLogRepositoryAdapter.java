@@ -13,11 +13,19 @@ import gasi.gps.core.starter.infrastructure.mapper.BaseMapper;
 /**
  * Adapter that implements {@link AuditLogSpi} from core-api,
  * allowing other plugins to manually write audit logs.
+ *
+ * @since 1.0.0
  */
 @Component
 public class AuditLogRepositoryAdapter extends BaseRepositoryAdapter<AuditLog, AuditLogEntity>
         implements AuditLogRepositoryPort {
 
+    /**
+     * Creates an audit log repository adapter.
+     *
+     * @param repository Spring Data audit log repository
+     * @param mapper     audit log mapper
+     */
     protected AuditLogRepositoryAdapter(AuditLogEntityRepository repository,
             BaseMapper<AuditLog, AuditLogEntity> mapper) {
         super(repository, mapper);

@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 /**
  * Filter expression that combines child filters with logical AND.
@@ -17,9 +16,16 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AndFilter extends GenericFilter {
+
+    /** Child filter expressions that must all match. */
     private List<GenericFilter> filters;
+
+    /**
+     * Creates an empty AND filter.
+     */
+    public AndFilter() {
+    }
 }

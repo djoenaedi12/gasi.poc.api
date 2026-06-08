@@ -1,5 +1,7 @@
 package gasi.gps.core.starter.infrastructure.mapper;
 
+import java.util.Arrays;
+
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +30,10 @@ public class StringArrayMapper {
         if (value == null || value.isBlank()) {
             return new String[0];
         }
-        return value.split(",");
+        return Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(item -> !item.isEmpty())
+                .toArray(String[]::new);
     }
 
     /**

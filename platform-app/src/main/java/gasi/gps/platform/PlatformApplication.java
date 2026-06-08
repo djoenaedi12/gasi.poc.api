@@ -45,6 +45,12 @@ public class PlatformApplication {
     private static final Path DEFAULT_PLUGINS_PATH = Paths.get("plugins");
 
     /**
+     * Creates the platform application entry point.
+     */
+    public PlatformApplication() {
+    }
+
+    /**
      * Application entry point that bootstraps PF4J plugins before Spring Boot.
      *
      * @param args command-line arguments passed to the Spring Boot application

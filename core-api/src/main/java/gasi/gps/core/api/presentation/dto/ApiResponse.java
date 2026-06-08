@@ -1,14 +1,12 @@
 package gasi.gps.core.api.presentation.dto;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import gasi.gps.core.api.application.exception.ErrorDetail;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Standard API response envelope for all REST endpoints.
@@ -29,33 +27,45 @@ import lombok.NoArgsConstructor;
  * <pre>{@code
  * {
  * "success": false,
- * "message": "Validation failed",
- * "errors": ["Business rule violation"],
- * "fieldErrors": {
- *   "name": ["Name is required"],
- *   "email": ["Email is invalid"]
- * },
+ * "status": 422,
+ * "message": "Business rule violation",
+ * "errors": [
+ * { "code": "PERSON_IDENTITY_PRIMARY_EXISTS", "field": "primaryIdentity",
+ * "message": "Primary identity already exists" }
+ * ],
  * "timestamp": "2026-03-03T10:15:30Z"
  * }
  * }</pre>
+ *
+ * <p>
+ * All errors share a single {@code errors} array of {@link ErrorDetail} items
+ * ({@code code}, optional {@code field}, {@code message}). The previous
+ * {@code fieldErrors} map and string-based {@code errors} list have been
+ * unified into this shape.
+ * </p>
  *
  * @param <T> the data payload type
  * @since 1.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 public class ApiResponse<T> {
 
     private boolean success;
+    private Integer status;
     private String message;
     private T data;
-    private List<String> errors;
-    private Map<String, List<String>> fieldErrors;
+    private List<ErrorDetail> errors;
 
     @Builder.Default
     private Instant timestamp = Instant.now();
+
+    /**
+     * Creates an empty API response envelope.
+     */
+    public ApiResponse() {
+    }
 
     /**
      * Creates a success response with data.
@@ -101,55 +111,37 @@ public class ApiResponse<T> {
     }
 
     /**
-     * Creates an error response with a single error message.
+     * Creates an error response with a single summary message (no field/code).
      *
-     * @param code    status or application error code reserved for callers that
-     *                map envelopes to transport responses
+     * @param status  HTTP/application status code stored on the envelope
      * @param message the error summary
      * @param <T>     the payload type
      * @return an error {@code ApiResponse}
      */
-    public static <T> ApiResponse<T> error(int code, String message) {
+    public static <T> ApiResponse<T> error(int status, String message) {
         return ApiResponse.<T>builder()
                 .success(false)
+                .status(status)
                 .message(message)
-                .errors(List.of(message))
+                .errors(List.of(ErrorDetail.of(null, message)))
                 .build();
     }
 
     /**
-     * Creates an error response with multiple error messages.
+     * Creates an error response with detailed, machine-readable error items.
      *
-     * @param code    status or application error code reserved for callers that
-     *                map envelopes to transport responses
+     * @param status  HTTP/application status code stored on the envelope
      * @param message the error summary
-     * @param errors  the list of detailed error messages
+     * @param errors  the structured error items
      * @param <T>     the payload type
      * @return an error {@code ApiResponse}
      */
-    public static <T> ApiResponse<T> error(int code, String message, List<String> errors) {
+    public static <T> ApiResponse<T> error(int status, String message, List<ErrorDetail> errors) {
         return ApiResponse.<T>builder()
                 .success(false)
+                .status(status)
                 .message(message)
-                .errors(Collections.unmodifiableList(errors))
-                .build();
-    }
-
-    /**
-     * Creates an error response with field-specific validation messages.
-     *
-     * @param code        status or application error code reserved for callers that
-     *                    map envelopes to transport responses
-     * @param message     the error summary
-     * @param fieldErrors the field-specific validation errors
-     * @param <T>         the payload type
-     * @return an error {@code ApiResponse}
-     */
-    public static <T> ApiResponse<T> fieldError(int code, String message, Map<String, List<String>> fieldErrors) {
-        return ApiResponse.<T>builder()
-                .success(false)
-                .message(message)
-                .fieldErrors(Collections.unmodifiableMap(fieldErrors))
+                .errors(errors == null ? List.of() : List.copyOf(errors))
                 .build();
     }
 }

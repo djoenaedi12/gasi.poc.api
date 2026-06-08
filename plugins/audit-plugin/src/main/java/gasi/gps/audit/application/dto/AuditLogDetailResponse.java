@@ -10,6 +10,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * Detail response DTO for single audit log entity views.
  * Contains all fields including audit metadata from {@link BaseDetailResponse}.
+ *
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder(toBuilder = true)
@@ -26,5 +28,7 @@ public class AuditLogDetailResponse extends BaseDetailResponse {
     private String resourceType;
     private String resourceId;
     private String description;
+    @lombok.Builder.Default
+    private String[] changedFields = new String[0];
     private String status;
 }

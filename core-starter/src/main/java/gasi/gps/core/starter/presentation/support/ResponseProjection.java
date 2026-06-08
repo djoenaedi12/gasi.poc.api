@@ -20,6 +20,8 @@ import gasi.gps.core.api.domain.model.PageResult;
  * <p>Projection is intentionally applied after DTO mapping so callers can only
  * select fields already exposed by the response DTO. Unknown fields are ignored,
  * and {@code id} is always included for list/table identity.</p>
+ *
+ * @since 1.0.0
  */
 public final class ResponseProjection {
 

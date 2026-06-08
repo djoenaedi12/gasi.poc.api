@@ -4,6 +4,8 @@ import org.pf4j.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.NoArgsConstructor;
+
 /**
  * PF4J plugin class for the Audit module.
  *
@@ -12,7 +14,10 @@ import org.slf4j.LoggerFactory;
  * (via {@code @AuditableEntity}) and custom method-level auditing
  * (via {@code @Auditable}).
  * </p>
+ *
+ * @since 1.0.0
  */
+@NoArgsConstructor
 public class AuditPlugin extends Plugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuditPlugin.class);

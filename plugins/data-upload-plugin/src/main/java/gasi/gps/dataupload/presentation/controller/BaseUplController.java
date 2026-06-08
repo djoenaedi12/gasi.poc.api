@@ -58,7 +58,9 @@ public abstract class BaseUplController {
      *
      * @param resource resource code
      * @param file     uploaded file
+     * @param parameters upload parameters passed to the resource processor
      * @return created upload detail
+     * @throws IOException if the uploaded file stream cannot be opened
      */
     @PostMapping
     @PreAuthorize("hasPermission(this, 'UPLOAD')")
@@ -131,8 +133,8 @@ public abstract class BaseUplController {
             @RequestBody SearchRequest request) {
         PageResult<DataUplSummaryResponse> result = service.findAll(
                 resource,
-                request.getPage() != null ? request.getPage() : 0,
-                request.getSize() != null ? request.getSize() : 10,
+                request.normalizedPage(),
+                request.normalizedSize(),
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
         return ApiResponse.ok(result);
@@ -143,6 +145,7 @@ public abstract class BaseUplController {
      *
      * @param resource resource code
      * @param id       encoded upload identifier
+     * @param parameters validation parameters passed to the resource processor
      * @return empty success response
      */
     @PostMapping("/{id}/validate")
@@ -160,6 +163,7 @@ public abstract class BaseUplController {
      *
      * @param resource resource code
      * @param id       encoded upload identifier
+     * @param parameters commit parameters passed to the resource processor
      * @return empty success response
      */
     @PostMapping("/{id}/commit")
@@ -224,8 +228,8 @@ public abstract class BaseUplController {
         PageResult<DataRowUplSummaryResponse> result = service.findRows(
                 resource,
                 uploadId,
-                request.getPage() != null ? request.getPage() : 0,
-                request.getSize() != null ? request.getSize() : 10,
+                request.normalizedPage(),
+                request.normalizedSize(),
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
         return ApiResponse.ok(result);

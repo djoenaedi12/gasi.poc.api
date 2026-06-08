@@ -3,7 +3,6 @@ package gasi.gps.core.api.domain.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Sort expression for search operations.
@@ -15,14 +14,21 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 public class SortOrder {
     private String field;
     private Direction direction;
 
     /**
+     * Creates an empty sort order.
+     */
+    public SortOrder() {
+    }
+
+    /**
      * Sort direction.
+     *
+     * @since 1.0.0
      */
     public enum Direction {
         /** Sort from lowest to highest. */

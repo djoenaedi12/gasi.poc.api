@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Framework-neutral page result.
@@ -18,7 +17,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 public class PageResult<T> {
     private List<T> content;
@@ -26,6 +24,12 @@ public class PageResult<T> {
     private int size;
     private long totalElements;
     private int totalPages;
+
+    /**
+     * Creates an empty page result.
+     */
+    public PageResult() {
+    }
 
     /**
      * Indicates whether there is another page after the current page.

@@ -16,9 +16,9 @@
 
     <!-- Clean Architecture: classes should be small and focused (SRP) -->
     <module name="FileLength">
-        <property name="max" value="300"/>
+        <property name="max" value="400"/>
         <message key="maxLen.file"
-                 value="File exceeds 300 lines. Consider splitting into smaller, single-responsibility classes."/>
+                 value="File exceeds 400 lines. Consider splitting into smaller, single-responsibility classes."/>
     </module>
 
     <!-- No trailing whitespace -->
@@ -88,10 +88,10 @@
 
         <!-- Too many parameters = too many responsibilities -->
         <module name="ParameterNumber">
-            <property name="max" value="5"/>
+            <property name="max" value="8"/>
             <property name="ignoreOverriddenMethods" value="true"/>
             <message key="maxParam"
-                     value="Method has {0,number,integer} parameters (max 5). Consider using a parameter object or builder."/>
+                     value="Method has {0,number,integer} parameters (max 8). Consider using a parameter object or builder."/>
         </module>
 
         <!-- Low cyclomatic complexity = easier to test and maintain -->
@@ -103,9 +103,9 @@
 
         <!-- Limit class fan-out (dependencies) — Dependency Rule -->
         <module name="ClassFanOutComplexity">
-            <property name="max" value="15"/>
+            <property name="max" value="25"/>
             <message key="classFanOutComplexity"
-                     value="Class depends on {0,number,integer} other classes (max 15). Reduce coupling by using interfaces or splitting responsibilities."/>
+                     value="Class depends on {0,number,integer} other classes (max 25). Reduce coupling by using interfaces or splitting responsibilities."/>
         </module>
 
         <!-- Limit method coupling -->

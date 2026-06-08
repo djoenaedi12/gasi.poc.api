@@ -95,7 +95,8 @@ public class GenericSpecification<T> implements Specification<T> {
             case EQUALS -> cb.equal(path, value);
             case NOT_EQUALS -> cb.notEqual(path, value);
             case GREATER_THAN -> cb.greaterThan((Path<? extends Comparable>) path, (Comparable) value);
-            case GREATER_THAN_OR_EQUALS -> cb.greaterThanOrEqualTo((Path<? extends Comparable>) path, (Comparable) value);
+            case GREATER_THAN_OR_EQUALS -> cb.greaterThanOrEqualTo(
+                    (Path<? extends Comparable>) path, (Comparable) value);
             case LESS_THAN -> cb.lessThan((Path<? extends Comparable>) path, (Comparable) value);
             case LESS_THAN_OR_EQUALS -> cb.lessThanOrEqualTo((Path<? extends Comparable>) path, (Comparable) value);
             case LIKE -> cb.like(path.as(String.class), "%" + value + "%");

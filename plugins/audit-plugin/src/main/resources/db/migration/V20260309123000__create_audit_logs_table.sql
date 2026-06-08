@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     resource_type VARCHAR(150),
     resource_id VARCHAR(50),
     description TEXT,
+    changed_fields TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS'
 );
 
@@ -23,3 +24,4 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_trace_id ON audit_logs (trace_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs (actor_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs (action);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_id ON audit_logs (resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs (resource_type, resource_id);

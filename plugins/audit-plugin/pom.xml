@@ -8,6 +8,7 @@
         <groupId>gasi.gps</groupId>
         <artifactId>modular-app</artifactId>
         <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>audit-plugin</artifactId>
@@ -22,6 +23,16 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.pf4j</groupId>
+            <artifactId>pf4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>gasi.gps</groupId>
             <artifactId>core-api</artifactId>

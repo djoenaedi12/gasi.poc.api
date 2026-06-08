@@ -4,6 +4,8 @@ import org.pf4j.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.NoArgsConstructor;
+
 /**
  * Entry point for data-upload-plugin.
  *
@@ -11,7 +13,10 @@ import org.slf4j.LoggerFactory;
  * Loaded by PF4J during platform-app startup. The plugin's Spring beans
  * are discovered by the platform host through the composite classloader and package scanning.
  * </p>
+ *
+ * @since 1.0.0
  */
+@NoArgsConstructor
 public class DataUploadPlugin extends Plugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataUploadPlugin.class);

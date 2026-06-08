@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Detail response DTO for a single action.
+ * Detail response DTO for a single upload row.
+ *
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

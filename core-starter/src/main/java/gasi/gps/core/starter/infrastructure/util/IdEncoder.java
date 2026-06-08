@@ -17,6 +17,8 @@ import gasi.gps.core.api.id.IdCodec;
  * Uses <a href="https://sqids.org">Sqids</a> library for reversible,
  * non-sequential ID obfuscation.
  * </p>
+ *
+ * @since 1.0.0
  */
 @Component
 public class IdEncoder implements IdCodec {

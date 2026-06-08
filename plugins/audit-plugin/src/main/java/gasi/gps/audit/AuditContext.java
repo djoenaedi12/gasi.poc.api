@@ -8,6 +8,8 @@ package gasi.gps.audit;
  *
  * <p>This prevents duplicate logs when, for example, EmployeeService.create()
  * internally calls UserService.create() and RoleService.create().</p>
+ *
+ * @since 1.0.0
  */
 public final class AuditContext {
 
@@ -18,6 +20,8 @@ public final class AuditContext {
 
     /**
      * Check if an audit context is already active (we're inside a nested call).
+     *
+     * @return {@code true} when audit logging is already active on this thread
      */
     public static boolean isActive() {
         return ACTIVE.get();

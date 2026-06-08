@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Summary response DTO for action listing.
+ * Summary response DTO for upload batch listing.
+ *
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

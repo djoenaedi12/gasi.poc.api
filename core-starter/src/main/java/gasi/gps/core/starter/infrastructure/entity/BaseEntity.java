@@ -27,6 +27,8 @@ import gasi.gps.core.starter.infrastructure.filter.Filterable;
 /**
  * Base JPA entity with auto-generated Long ID, audit fields, and optimistic
  * locking.
+ *
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder(toBuilder = true)

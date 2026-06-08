@@ -3,7 +3,6 @@ package gasi.gps.audit.infrastructure.entity;
 import gasi.gps.core.starter.infrastructure.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,6 +10,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * JPA entity for persisted audit log entries.
+ *
+ * @since 1.0.0
+ */
 @Data
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor
@@ -43,6 +47,9 @@ public class AuditLogEntity extends BaseEntity {
 
     @Column(name = "description", columnDefinition = "text")
     private String description;
+
+    @Column(name = "changed_fields", columnDefinition = "text")
+    private String changedFields;
 
     @lombok.Builder.Default
     @Column(name = "status", nullable = false, length = 20)

@@ -30,6 +30,8 @@ import gasi.gps.core.api.security.SecurityContextProvider;
  * implement and register a suitable {@link SecurityContextProvider} for your
  * authentication mechanism to get accurate auditing information.
  * for {@code @CreatedBy} and {@code @LastModifiedBy} fields.
+ *
+ * @since 1.0.0
  */
 @Configuration
 @EnableJpaAuditing
@@ -37,10 +39,22 @@ public class JpaAuditingConfig {
 
     private final ObjectProvider<SecurityContextProvider> securityContextProvider;
 
+    /**
+     * Creates the JPA auditing configuration.
+     *
+     * @param securityContextProvider optional security context provider used to
+     *                                resolve the current username
+     */
     public JpaAuditingConfig(ObjectProvider<SecurityContextProvider> securityContextProvider) {
         this.securityContextProvider = securityContextProvider;
     }
 
+    /**
+     * Provides the current auditor for Spring Data JPA auditing fields.
+     *
+     * @return auditor provider that resolves the username or falls back to
+     *         {@code system}
+     */
     @Bean
     public AuditorAware<String> auditorAware() {
         return () -> Optional.ofNullable(securityContextProvider.getIfAvailable())

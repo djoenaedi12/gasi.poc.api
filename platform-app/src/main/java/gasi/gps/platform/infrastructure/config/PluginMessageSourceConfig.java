@@ -41,6 +41,12 @@ public class PluginMessageSourceConfig {
     private static final Logger LOG = LoggerFactory.getLogger(PluginMessageSourceConfig.class);
 
     /**
+     * Creates the plugin message source configuration.
+     */
+    public PluginMessageSourceConfig() {
+    }
+
+    /**
      * Creates a {@link ReloadableResourceBundleMessageSource} that combines
      * message basenames from all plugins with the core application's basenames.
      *

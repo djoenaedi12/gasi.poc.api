@@ -237,14 +237,31 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
 
     private Sort toSort(List<SortOrder> orders) {
         if (orders == null || orders.isEmpty()) {
-            return Sort.unsorted();
+            return defaultSort();
         }
-        return Sort.by(orders.stream()
+
+        List<Sort.Order> sortOrders = orders.stream()
                 .filter(s -> s.getField() != null && !s.getField().isBlank())
                 .map(order -> new Sort.Order(
                         Sort.Direction.fromString(order.getDirection().toString()),
                         FilterableFieldResolver.resolve(entityClass, order.getField())))
-                .toList());
+                .collect(Collectors.toList());
+
+        if (sortOrders.isEmpty()) {
+            return defaultSort();
+        }
+        if (sortOrders.stream().noneMatch(order -> "id".equals(order.getProperty()))) {
+            sortOrders.add(defaultIdOrder());
+        }
+        return Sort.by(sortOrders);
+    }
+
+    private Sort defaultSort() {
+        return Sort.by(defaultIdOrder());
+    }
+
+    private Sort.Order defaultIdOrder() {
+        return Sort.Order.asc("id");
     }
 
     @SuppressWarnings("unchecked")
