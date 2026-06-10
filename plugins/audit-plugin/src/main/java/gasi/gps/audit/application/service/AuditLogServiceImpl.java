@@ -1,5 +1,7 @@
 package gasi.gps.audit.application.service;
 
+import org.springframework.stereotype.Service;
+
 import gasi.gps.audit.application.dto.AuditLogDetailResponse;
 import gasi.gps.audit.application.dto.AuditLogSummaryResponse;
 import gasi.gps.audit.application.mapper.AuditLogDtoMapper;
@@ -15,6 +17,7 @@ import gasi.gps.core.starter.infrastructure.util.IdEncoder;
  *
  * @since 1.0.0
  */
+@Service
 public class AuditLogServiceImpl extends BaseReadServiceImpl<AuditLog, AuditLogSummaryResponse, AuditLogDetailResponse>
         implements AuditLogService {
 

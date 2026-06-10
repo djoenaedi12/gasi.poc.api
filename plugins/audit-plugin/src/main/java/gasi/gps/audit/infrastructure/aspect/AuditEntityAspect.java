@@ -11,16 +11,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.aspectj.lang.JoinPoint;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.pf4j.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -36,15 +36,12 @@ import gasi.gps.core.starter.infrastructure.entity.BaseEntity;
 import gasi.gps.core.starter.infrastructure.util.IdEncoder;
 
 /**
- * AOP Aspect that intercepts BaseService CUD methods and generates audit logs
- * for services annotated with @AuditableEntity.
+ * Intercepts standard CUD service operations for classes marked with
+ * {@link AuditableEntity}.
  *
- * <p>
- * Handles nested call detection via AuditContext ThreadLocal:
- * - Default (alwaysLog = false): skip logging if already inside another audited
- * call
- * - alwaysLog = true: always log regardless of nesting
- * </p>
+ * <p>The audit context is active for the complete service invocation. Nested
+ * audited calls are therefore suppressed unless their annotation explicitly
+ * enables {@code alwaysLog}.</p>
  *
  * @since 1.0.0
  */
@@ -66,204 +63,176 @@ public class AuditEntityAspect {
             "version");
 
     private final AuditLogRepositoryPort repository;
-    private final SecurityContextProvider securityContextUtil;
+    private final SecurityContextProvider securityContextProvider;
     private final PluginManager pluginManager;
     private final IdEncoder idEncoder;
 
     /**
-     * Creates the entity-level audit aspect.
+     * Creates the entity audit aspect.
      *
-     * @param repository          audit log repository
-     * @param securityContextUtil current security context provider
-     * @param pluginManager       PF4J plugin manager for audit extensions
-     * @param idEncoder           encoded ID codec
+     * @param repository              audit log repository
+     * @param securityContextProvider current security context provider
+     * @param pluginManager           PF4J plugin manager for description extensions
+     * @param idEncoder               encoded ID codec
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "PluginManager is a shared Spring/PF4J infrastructure singleton")
     public AuditEntityAspect(AuditLogRepositoryPort repository,
-            SecurityContextProvider securityContextUtil,
+            SecurityContextProvider securityContextProvider,
             PluginManager pluginManager,
             IdEncoder idEncoder) {
         this.repository = repository;
-        this.securityContextUtil = securityContextUtil;
+        this.securityContextProvider = securityContextProvider;
         this.pluginManager = pluginManager;
         this.idEncoder = idEncoder;
     }
 
-    // ─── CREATE ──────────────────────────────────────────────────────
-
     /**
-     * Writes a create audit log after a service create call returns.
+     * Audits create, update, and delete operations exposed by a base service.
      *
-     * @param joinPoint join point for the create call
-     * @param target    service target object
-     * @param result    created object returned by the service
+     * @param joinPoint intercepted service invocation
+     * @param target    concrete service instance
+     * @return original service result
+     * @throws Throwable when the service invocation fails
      */
-    @AfterReturning(pointcut = "execution(* gasi.gps..BaseService+.create(..)) && target(target)", returning = "result")
-    public void auditCreate(JoinPoint joinPoint, Object target, Object result) {
-        doLog(target, "CREATE", result);
-    }
-
-    // ─── UPDATE ──────────────────────────────────────────────────────
-
-    /**
-     * Writes an update audit log around a service update call.
-     *
-     * @param joinPoint proceeding join point for the update call
-     * @param target    service target object
-     * @return result returned by the update call
-     * @throws Throwable if the audited update call fails
-     */
-    @Around("execution(* gasi.gps..BaseService+.update(..)) && target(target)")
-    public Object auditUpdate(ProceedingJoinPoint joinPoint, Object target) throws Throwable {
-        Object idArg = joinPoint.getArgs().length > 0 ? joinPoint.getArgs()[0] : null;
-        Long id = idArg instanceof Long longId ? longId : null;
-        Object before = findDetailBeforeUpdate(target, id);
-        Object result = joinPoint.proceed();
-        String[] changedFields = resolveChangedFields(before, result);
-        doLogWithId(target, "UPDATE", idArg != null ? idArg.toString() : null, changedFields);
-        return result;
-    }
-
-    // ─── DELETE ──────────────────────────────────────────────────────
-
-    /**
-     * Writes a delete audit log after a service delete call returns.
-     *
-     * @param joinPoint join point for the delete call
-     * @param target    service target object
-     */
-    @AfterReturning(pointcut = "execution(* gasi.gps..BaseService+.delete(..)) && target(target)")
-    public void auditDelete(JoinPoint joinPoint, Object target) {
-        Object idArg = joinPoint.getArgs().length > 0 ? joinPoint.getArgs()[0] : null;
-        doLogWithId(target, "DELETE", idArg != null ? idArg.toString() : null);
-    }
-
-    // ─── FAILURE ─────────────────────────────────────────────────────
-
-    /**
-     * Writes a failure audit log when a CUD service method throws.
-     *
-     * @param joinPoint join point for the failing call
-     * @param target    service target object
-     * @param ex        thrown exception
-     */
-    @AfterThrowing(pointcut = "execution(* gasi.gps..BaseService+.create(..)) && target(target)"
+    @Around("execution(* gasi.gps..BaseService+.create(..)) && target(target)"
             + " || execution(* gasi.gps..BaseService+.update(..)) && target(target)"
-            + " || execution(* gasi.gps..BaseService+.delete(..)) && target(target)", throwing = "ex")
-    public void auditFailure(JoinPoint joinPoint, Object target, Exception ex) {
-        AuditableEntity annotation = target.getClass().getAnnotation(AuditableEntity.class);
+            + " || execution(* gasi.gps..BaseService+.delete(..)) && target(target)")
+    public Object auditOperation(ProceedingJoinPoint joinPoint, Object target) throws Throwable {
+        AuditableEntity annotation = findAnnotation(target);
         if (annotation == null) {
-            return;
+            return joinPoint.proceed();
         }
 
-        String action = resolveActionFromMethod(joinPoint.getSignature().getName());
+        String action = resolveAction(joinPoint.getSignature().getName());
+        if (!shouldAudit(annotation, action)) {
+            return joinPoint.proceed();
+        }
+
+        boolean nested = AuditContext.isActive();
+        if (nested && !annotation.alwaysLog()) {
+            return joinPoint.proceed();
+        }
+
+        return proceedAudited(joinPoint, target, annotation, action, nested);
+    }
+
+    private Object proceedAudited(ProceedingJoinPoint joinPoint,
+            Object target,
+            AuditableEntity annotation,
+            String action,
+            boolean nested) throws Throwable {
+        boolean root = !nested;
+        if (root) {
+            AuditContext.start();
+        }
+
+        Object idArg = firstArgument(joinPoint);
+        Object before = "UPDATE".equals(action)
+                ? findDetailBeforeUpdate(target, asLong(idArg))
+                : null;
 
         try {
-            repository.save(AuditLog.builder()
-                    .traceId(MDC.get("traceId"))
-                    .actorId(securityContextUtil.getCurrentUsername())
-                    .actorIp(securityContextUtil.getCurrentIp())
-                    .action(action)
-                    .module(annotation.module())
-                    .resourceType(annotation.resourceType())
-                    .description("Failed: " + ex.getMessage())
-                    .status("FAILED")
-                    .createdAt(Instant.now())
-                    .build());
-        } catch (Exception logEx) {
-            LOG.error("Failed to write audit log for failure", logEx);
-        }
-    }
-
-    // ─── Core Logic ──────────────────────────────────────────────────
-
-    private String resolveEntityId(Object target) {
-        if (target instanceof BaseEntity entity) {
-            return entity.getId() != null ? entity.getId().toString() : null;
-        } else if (target instanceof BaseSummaryResponse srs) {
-            Long idLong = idEncoder.decode(srs.getId());
-            return idLong != null ? idLong.toString() : null;
-        }
-        return null;
-    }
-
-    private void doLog(Object target, String action, Object result) {
-        doLogWithId(target, action, resolveEntityId(result), NO_CHANGED_FIELDS);
-    }
-
-    private void doLogWithId(Object target, String action, String entityId) {
-        doLogWithId(target, action, entityId, NO_CHANGED_FIELDS);
-    }
-
-    private void doLogWithId(Object target, String action, String entityId, String[] changedFields) {
-        AuditableEntity annotation = target.getClass().getAnnotation(AuditableEntity.class);
-        if (annotation == null) {
-            return;
-        }
-
-        if (!shouldAudit(annotation, action) || isNestedAuditSuppressed(annotation)) {
-            return;
-        }
-
-        boolean isRoot = !AuditContext.isActive();
-        try {
-            if (isRoot) {
-                AuditContext.start();
-            }
-
-            String description = resolveDescription(annotation, action, entityId);
-            repository.save(successAuditLog(annotation, action, entityId, description, changedFields));
-
-        } catch (Exception e) {
-            LOG.error("Failed to write audit log", e);
+            Object result = joinPoint.proceed();
+            String resourceId = resolveResourceId(action, idArg, result);
+            String[] changedFields = "UPDATE".equals(action)
+                    ? resolveChangedFields(before, result)
+                    : NO_CHANGED_FIELDS;
+            writeSuccess(annotation, action, resourceId, changedFields);
+            return result;
+        } catch (Throwable throwable) {
+            writeFailure(annotation, action, idArg, throwable);
+            throw throwable;
         } finally {
-            if (isRoot) {
+            if (root) {
                 AuditContext.clear();
             }
         }
     }
 
-    private boolean shouldAudit(AuditableEntity annotation, String action) {
-        return List.of(annotation.auditActions()).contains(action);
+    private AuditableEntity findAnnotation(Object target) {
+        return AnnotatedElementUtils.findMergedAnnotation(
+                AopUtils.getTargetClass(target), AuditableEntity.class);
     }
 
-    private boolean isNestedAuditSuppressed(AuditableEntity annotation) {
-        return AuditContext.isActive() && !annotation.alwaysLog();
-    }
-
-    private AuditLog successAuditLog(
-            AuditableEntity annotation,
+    private void writeSuccess(AuditableEntity annotation,
             String action,
-            String entityId,
-            String description,
+            String resourceId,
             String[] changedFields) {
+        try {
+            String description = resolveDescription(annotation, action, resourceId);
+            repository.save(baseLog(annotation, action)
+                    .resourceId(resourceId)
+                    .description(description)
+                    .changedFields(changedFields)
+                    .status("SUCCESS")
+                    .build());
+        } catch (Exception exception) {
+            LOG.error("Failed to write successful audit log", exception);
+        }
+    }
+
+    private void writeFailure(AuditableEntity annotation,
+            String action,
+            Object idArg,
+            Throwable throwable) {
+        try {
+            repository.save(baseLog(annotation, action)
+                    .resourceId(idArg != null ? idArg.toString() : null)
+                    .description("Failed: " + failureMessage(throwable))
+                    .changedFields(NO_CHANGED_FIELDS)
+                    .status("FAILED")
+                    .build());
+        } catch (Exception exception) {
+            LOG.error("Failed to write failed audit log", exception);
+        }
+    }
+
+    private AuditLog.AuditLogBuilder<?, ?> baseLog(AuditableEntity annotation, String action) {
         return AuditLog.builder()
                 .traceId(MDC.get("traceId"))
-                .actorId(securityContextUtil.getCurrentUsername())
-                .actorIp(securityContextUtil.getCurrentIp())
+                .actorId(securityContextProvider.getCurrentUsername())
+                .actorIp(securityContextProvider.getCurrentIp())
                 .action(action)
                 .module(annotation.module())
                 .resourceType(annotation.resourceType())
-                .resourceId(entityId)
-                .description(description)
-                .changedFields(changedFields != null ? changedFields : NO_CHANGED_FIELDS)
-                .status("SUCCESS")
-                .createdAt(Instant.now())
-                .build();
+                .createdAt(Instant.now());
     }
 
-    private String resolveDescription(AuditableEntity annotation, String action, String entityId) {
-        // Try plugin enrichers first
-        List<AuditLogExtension> enrichers = pluginManager.getExtensions(AuditLogExtension.class);
-        for (AuditLogExtension enricher : enrichers) {
-            String desc = enricher.resolveDescription(action, annotation.resourceType(), entityId);
-            if (desc != null) {
-                return desc;
+    private String resolveResourceId(String action, Object idArg, Object result) {
+        if ("CREATE".equals(action)) {
+            return resolveEntityId(result);
+        }
+        return idArg != null ? idArg.toString() : null;
+    }
+
+    private String resolveEntityId(Object target) {
+        if (target instanceof BaseEntity entity) {
+            return entity.getId() != null ? entity.getId().toString() : null;
+        }
+        if (target instanceof BaseSummaryResponse response && response.getId() != null) {
+            Long decodedId = idEncoder.decode(response.getId());
+            return decodedId != null ? decodedId.toString() : null;
+        }
+        return null;
+    }
+
+    private String resolveDescription(AuditableEntity annotation, String action, String resourceId) {
+        List<AuditLogExtension> extensions = pluginManager.getExtensions(AuditLogExtension.class);
+        for (AuditLogExtension extension : extensions) {
+            if (!annotation.module().equalsIgnoreCase(extension.supportedModule())) {
+                continue;
+            }
+            String description = extension.resolveDescription(
+                    action, annotation.resourceType(), resourceId);
+            if (description != null) {
+                return description;
             }
         }
 
-        // Default description
         return action + " " + annotation.resourceType()
-                + (entityId != null ? "#" + entityId : "");
+                + (resourceId != null ? "#" + resourceId : "");
     }
 
     private Object findDetailBeforeUpdate(Object target, Long id) {
@@ -272,8 +241,8 @@ public class AuditEntityAspect {
         }
         try {
             return service.findById(id);
-        } catch (Exception e) {
-            LOG.debug("Could not resolve audit snapshot before update", e);
+        } catch (Exception exception) {
+            LOG.debug("Could not resolve audit snapshot before update", exception);
             return null;
         }
     }
@@ -298,18 +267,37 @@ public class AuditEntityAspect {
             }
             fields.sort(Comparator.naturalOrder());
             return fields.isEmpty() ? NO_CHANGED_FIELDS : fields.toArray(String[]::new);
-        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-            LOG.debug("Could not resolve changed fields for audit log", e);
+        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException exception) {
+            LOG.debug("Could not resolve changed fields for audit log", exception);
             return NO_CHANGED_FIELDS;
         }
     }
 
-    private String resolveActionFromMethod(String methodName) {
+    private boolean shouldAudit(AuditableEntity annotation, String action) {
+        return List.of(annotation.auditActions()).contains(action);
+    }
+
+    private Object firstArgument(ProceedingJoinPoint joinPoint) {
+        return joinPoint.getArgs().length > 0 ? joinPoint.getArgs()[0] : null;
+    }
+
+    private Long asLong(Object value) {
+        return value instanceof Long longValue ? longValue : null;
+    }
+
+    private String resolveAction(String methodName) {
         return switch (methodName) {
             case "create" -> "CREATE";
             case "update" -> "UPDATE";
             case "delete" -> "DELETE";
             default -> methodName.toUpperCase();
         };
+    }
+
+    private String failureMessage(Throwable throwable) {
+        String message = throwable.getMessage();
+        return message != null && !message.isBlank()
+                ? message
+                : throwable.getClass().getSimpleName();
     }
 }

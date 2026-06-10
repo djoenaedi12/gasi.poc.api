@@ -2,6 +2,9 @@ package gasi.gps.audit.presentation.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import gasi.gps.audit.application.dto.AuditLogDetailResponse;
 import gasi.gps.audit.application.dto.AuditLogSummaryResponse;
 import gasi.gps.audit.domain.port.inbound.AuditLogService;
@@ -13,6 +16,8 @@ import gasi.gps.core.starter.infrastructure.util.IdEncoder;
  *
  * @since 1.0.0
  */
+@RestController
+@RequestMapping("/api/v1/audit-logs")
 public class AuditLogController extends BaseReadController<AuditLogSummaryResponse, AuditLogDetailResponse> {
 
     /**

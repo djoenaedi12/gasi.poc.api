@@ -13,7 +13,7 @@ Plugin ini menyediakan dua mekanisme audit:
 Annotasi di **class level** pada service yang extend `BaseService`. Aspect `AuditEntityAspect` akan intercept method `create`, `update`, dan `delete` secara otomatis.
 
 ```java
-@AuditableEntity(category = "EMPLOYEE", resourceType = "Employee")
+@AuditableEntity(module = "employee", resourceType = "Employee")
 public class EmployeeServiceImpl extends BaseServiceImpl<...> implements EmployeeService {
     // Audit CREATE, UPDATE, DELETE otomatis tanpa kode tambahan
 }
@@ -21,7 +21,7 @@ public class EmployeeServiceImpl extends BaseServiceImpl<...> implements Employe
 
 | Atribut        | Wajib | Default                    | Keterangan |
 |---------------|-------|----------------------------|------------|
-| `category`    | ya    | —                          | Grup bisnis log, misal: `EMPLOYEE`, `PAYROLL`, `AUTH` |
+| `module`      | ya    | —                          | Modul pemilik resource, misal: `employee`, `payroll`, `auth` |
 | `resourceType`| tidak | `""`                       | Nama entity yang terbaca di log, misal: `Employee` |
 | `auditActions`| tidak | `["CREATE","UPDATE","DELETE"]` | Pilih action mana saja yang diaudit |
 | `alwaysLog`   | tidak | `false`                    | Jika `true`, tetap dilog meski dipanggil dari dalam service lain yang sudah diaudit |
@@ -33,7 +33,7 @@ Annotasi di **method level** untuk operasi di luar CRUD standar. Mendukung **SpE
 ```java
 @Auditable(
     action = "APPROVE",
-    category = "LEAVE",
+    module = "leave",
     description = "Approve leave request #{#id} for employee #{#result.employeeName}"
 )
 public LeaveRequest approveLeave(Long id) { ... }
@@ -42,7 +42,7 @@ public LeaveRequest approveLeave(Long id) { ... }
 | Atribut      | Wajib | Default | Keterangan |
 |-------------|-------|---------|------------|
 | `action`    | ya    | —       | Nama aksi: `APPROVE`, `REJECT`, `EXPORT`, `LOGIN`, dll. |
-| `category`  | tidak | `""`    | Grup bisnis log |
+| `module`    | tidak | `""`    | Modul pemilik operasi |
 | `description`| tidak | `""`   | Deskripsi dengan SpEL: `#{#paramName}`, `#{#result.field}` |
 | `alwaysLog` | tidak | `false` | Sama seperti di `@AuditableEntity` |
 
@@ -71,11 +71,10 @@ Jika entity sensitif harus selalu dicatat (misal `BankAccount`), gunakan `always
 | `actorId`     | `String`   | Username pelaku aksi |
 | `actorIp`     | `String`   | IP address pelaku |
 | `action`      | `String`   | `CREATE`, `UPDATE`, `DELETE`, `APPROVE`, dll. |
-| `category`    | `String`   | Kategori bisnis, misal `EMPLOYEE` |
 | `module`      | `String`   | Nama plugin/module |
 | `resourceType`| `String`   | Nama entity, misal `Employee` |
 | `resourceId`  | `String`   | ID entity yang dikenai aksi |
-| `fieldsChanged`| `String[]`| (opsional) Field yang berubah |
+| `changedFields`| `String[]`| (opsional) Field yang berubah |
 | `description` | `String`   | Deskripsi human-readable |
 | `status`      | `String`   | `SUCCESS` atau `FAILED` |
 | `createdAt`   | `Instant`  | Waktu log dibuat |
@@ -84,13 +83,12 @@ Jika entity sensitif harus selalu dicatat (misal `BankAccount`), gunakan `always
 
 ## REST API
 
-| Method | Endpoint           | Deskripsi                      |
-|--------|--------------------|--------------------------------|
-| GET    | `/audit-logs`      | List semua audit log (summary) |
-| GET    | `/audit-logs/{id}` | Detail satu audit log          |
-| POST   | `/audit-logs`      | Buat log manual (internal)     |
-| PUT    | `/audit-logs/{id}` | Update log (internal)          |
-| DELETE | `/audit-logs/{id}` | Hapus log (internal)           |
+| Method | Endpoint                         | Deskripsi                    |
+|--------|----------------------------------|------------------------------|
+| GET    | `/api/v1/audit-logs/{id}`        | Detail satu audit log        |
+| POST   | `/api/v1/audit-logs/search`      | Cari satu audit log          |
+| POST   | `/api/v1/audit-logs/search/list` | List audit log               |
+| POST   | `/api/v1/audit-logs/search/page` | Pagination audit log         |
 
 > ID pada endpoint menggunakan **Sqids** (encoded), bukan raw DB ID.
 
@@ -133,8 +131,6 @@ audit-plugin/src/main/java/gasi/gps/audit/
 ├── AuditContext.java                         # ThreadLocal untuk nested call control
 ├── application/
 │   ├── dto/
-│   │   ├── AuditLogCreateRequest.java
-│   │   ├── AuditLogUpdateRequest.java
 │   │   ├── AuditLogSummaryResponse.java
 │   │   └── AuditLogDetailResponse.java
 │   ├── mapper/
@@ -187,8 +183,7 @@ public class PayrollBatchService {
 
         auditLogSpi.log(
             "RUN",
-            "PAYROLL",
-            "gps-payroll",       // module (opsional)
+            "gps-payroll",
             "PayrollRun",
             periodId.toString(),
             "Payroll run periode #" + periodId + " selesai diproses"
@@ -201,10 +196,9 @@ public class PayrollBatchService {
 
 | Method | Parameter | Keterangan |
 |--------|-----------|------------|
-| `log(action, category, entityType, entityId, description)` | 5 param | Tanpa info module |
-| `log(action, category, module, entityType, entityId, description)` | 6 param | Dengan nama module |
+| `log(action, module, entityType, entityId, description)` | 5 param | Menulis event audit dari module pemilik |
 
-> `AuditLogSpi` di-implementasikan oleh `audit-plugin` dan di-expose sebagai Spring Bean. Plugin lain cukup inject interface-nya — tidak perlu depend langsung ke `audit-plugin`.
+> `AuditLogSpi` diimplementasikan oleh `audit-plugin` dan diekspos sebagai Spring Bean. Penulisan log memakai transaksi `REQUIRES_NEW`, sehingga log kegagalan tetap dapat tersimpan ketika transaksi bisnis rollback.
 
 ---
 
