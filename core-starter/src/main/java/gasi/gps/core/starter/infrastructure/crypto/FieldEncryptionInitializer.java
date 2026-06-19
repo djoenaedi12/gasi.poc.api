@@ -16,6 +16,6 @@ public class FieldEncryptionInitializer {
      * @param fieldEncryptor encryptor to use from JPA converters
      */
     public FieldEncryptionInitializer(FieldEncryptor fieldEncryptor) {
-        EncryptedStringConverter.configure(fieldEncryptor);
+        AbstractEncryptedAttributeConverter.configure(fieldEncryptor);
     }
 }

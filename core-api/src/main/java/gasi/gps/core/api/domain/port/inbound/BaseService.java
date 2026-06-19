@@ -26,7 +26,18 @@ public interface BaseService<D extends BaseModel, CRQ, URQ, SRS, DRS>
      * @param request create request payload
      * @return detail response for the created resource
      */
-    DRS create(CRQ request);
+    default DRS create(CRQ request) {
+        return create(request, MutationOptions.defaults());
+    }
+
+    /**
+     * Creates a new resource from the given request.
+     *
+     * @param request create request payload
+     * @param options mutation options
+     * @return detail response for the created resource
+     */
+    DRS create(CRQ request, MutationOptions options);
 
     /**
      * Updates an existing resource.
@@ -35,12 +46,34 @@ public interface BaseService<D extends BaseModel, CRQ, URQ, SRS, DRS>
      * @param request update request payload
      * @return detail response for the updated resource
      */
-    DRS update(Long id, URQ request);
+    default DRS update(Long id, URQ request) {
+        return update(id, request, MutationOptions.defaults());
+    }
+
+    /**
+     * Updates an existing resource.
+     *
+     * @param id      internal database identifier
+     * @param request update request payload
+     * @param options mutation options
+     * @return detail response for the updated resource
+     */
+    DRS update(Long id, URQ request, MutationOptions options);
 
     /**
      * Deletes a resource by internal numeric identifier.
      *
      * @param id internal database identifier
      */
-    void delete(Long id);
+    default void delete(Long id) {
+        delete(id, MutationOptions.defaults());
+    }
+
+    /**
+     * Deletes a resource by internal numeric identifier.
+     *
+     * @param id      internal database identifier
+     * @param options mutation options
+     */
+    void delete(Long id, MutationOptions options);
 }

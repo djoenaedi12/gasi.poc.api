@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import gasi.gps.core.api.domain.model.PageResult;
 import gasi.gps.core.api.domain.port.inbound.BaseReadService;
+import gasi.gps.core.api.application.hook.ResourceControllerHook;
 import gasi.gps.core.api.presentation.dto.ApiResponse;
 import gasi.gps.core.api.presentation.dto.SearchRequest;
+import gasi.gps.core.starter.application.hook.ResourceControllerHookRegistry;
 import gasi.gps.core.starter.presentation.support.ResponseProjection;
 import gasi.gps.core.starter.infrastructure.util.IdEncoder;
 
@@ -71,17 +73,21 @@ public abstract class BaseReadController<SRS, DRS> {
 
     private final BaseReadService<SRS, DRS> service;
     private final IdEncoder idEncoder;
+    private final ResourceControllerHookRegistry hookRegistry;
 
     /**
-     * Constructs a new {@code BaseReadController}.
+     * Constructs a new {@code BaseReadController} with ordered controller hooks.
      *
-     * @param service   the service handling business logic
-     * @param idEncoder the ID encoder for encoding/decoding IDs
+     * @param service      the service handling business logic
+     * @param idEncoder    the ID encoder for encoding/decoding IDs
+     * @param hookRegistry registry for generated and custom controller hooks
      */
     protected BaseReadController(BaseReadService<SRS, DRS> service,
-            IdEncoder idEncoder) {
+            IdEncoder idEncoder,
+            ResourceControllerHookRegistry hookRegistry) {
         this.service = service;
         this.idEncoder = idEncoder;
+        this.hookRegistry = hookRegistry;
     }
 
     /**
@@ -132,7 +138,11 @@ public abstract class BaseReadController<SRS, DRS> {
     @GetMapping("/{id}")
     @PreAuthorize("hasPermission(this, 'READ')")
     public ApiResponse<DRS> findById(@PathVariable String id) {
-        return ApiResponse.ok(service.findById(idEncoder.decode(id)));
+        ResourceControllerHook<Object, Object, SRS, DRS> hook = controllerHook();
+        hook.beforeFindByIdRequest(id);
+        ApiResponse<DRS> response = ApiResponse.ok(service.findById(idEncoder.decode(id)));
+        hook.afterFindByIdResponse(response, id);
+        return response;
     }
 
     /**
@@ -144,7 +154,11 @@ public abstract class BaseReadController<SRS, DRS> {
     @PostMapping("/search")
     @PreAuthorize("hasPermission(this, 'READ')")
     public ApiResponse<DRS> findBy(@RequestBody SearchRequest request) {
-        return ApiResponse.ok(service.findBy(request.getFilter()));
+        ResourceControllerHook<Object, Object, SRS, DRS> hook = controllerHook();
+        hook.beforeFindByRequest(request);
+        ApiResponse<DRS> response = ApiResponse.ok(service.findBy(request.getFilter()));
+        hook.afterFindByResponse(response, request);
+        return response;
     }
 
     /**
@@ -156,10 +170,14 @@ public abstract class BaseReadController<SRS, DRS> {
     @PostMapping("/search/list")
     @PreAuthorize("hasPermission(this, 'READ')")
     public ApiResponse<List<?>> findAll(@RequestBody SearchRequest request) {
+        ResourceControllerHook<Object, Object, SRS, DRS> hook = controllerHook();
+        hook.beforeFindAllRequest(request);
         List<SRS> result = service.findAll(
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
-        return ApiResponse.ok(ResponseProjection.projectList(result, resolveProjectionFields(request)));
+        ApiResponse<List<?>> response = ApiResponse.ok(ResponseProjection.projectList(result, resolveProjectionFields(request)));
+        hook.afterFindAllResponse(response, request);
+        return response;
     }
 
     /**
@@ -172,12 +190,16 @@ public abstract class BaseReadController<SRS, DRS> {
     @PreAuthorize("hasPermission(this, 'READ')")
     public ApiResponse<PageResult<?>> findAllPaged(
             @RequestBody SearchRequest request) {
+        ResourceControllerHook<Object, Object, SRS, DRS> hook = controllerHook();
+        hook.beforeFindAllPagedRequest(request);
         PageResult<SRS> result = service.findAll(
                 request.normalizedPage(),
                 request.normalizedSize(),
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
-        return ApiResponse.ok(ResponseProjection.projectPage(result, resolveProjectionFields(request)));
+        ApiResponse<PageResult<?>> response = ApiResponse.ok(ResponseProjection.projectPage(result, resolveProjectionFields(request)));
+        hook.afterFindAllPagedResponse(response, request);
+        return response;
     }
 
     /**
@@ -190,13 +212,17 @@ public abstract class BaseReadController<SRS, DRS> {
     @PostMapping("/lookup/search/page")
     @PreAuthorize("hasPermission(this, 'LOOKUP')")
     public ApiResponse<PageResult<?>> lookupPaged(@RequestBody SearchRequest request) {
+        ResourceControllerHook<Object, Object, SRS, DRS> hook = controllerHook();
+        hook.beforeLookupPagedRequest(request);
         PageResult<SRS> result = service.findAll(
                 request.normalizedPage(),
                 request.normalizedSize(),
                 request.getFilter(),
                 request.getSorts() != null ? request.getSorts() : Collections.emptyList());
 
-        return ApiResponse.ok(ResponseProjection.projectPage(result, resolveLookupFields(request)));
+        ApiResponse<PageResult<?>> response = ApiResponse.ok(ResponseProjection.projectPage(result, resolveLookupFields(request)));
+        hook.afterLookupPagedResponse(response, request);
+        return response;
     }
 
     /**
@@ -212,5 +238,12 @@ public abstract class BaseReadController<SRS, DRS> {
         return request.getFields() == null || request.getFields().isEmpty()
                 ? getDefaultLookupFields()
                 : request.getFields();
+    }
+
+    protected <CRQ, URQ> ResourceControllerHook<CRQ, URQ, SRS, DRS> controllerHook() {
+        if (hookRegistry == null) {
+            return ResourceControllerHook.noop();
+        }
+        return hookRegistry.resolve(getResourceName());
     }
 }

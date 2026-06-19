@@ -11,5 +11,15 @@ public enum LifecycleStatus {
     /** Entity is retained but disabled for normal use. */
     INACTIVE,
     /** Entity has been soft-deleted and should be excluded from normal views. */
-    DELETED
+    DELETED,
+    /** Entity is saved but not submitted for approval yet. */
+    DRAFT,
+    /** Entity creation is waiting for approval. */
+    PENDING_CREATE,
+    /** Entity update is waiting for approval. */
+    PENDING_UPDATE,
+    /** Entity deletion is waiting for approval. */
+    PENDING_DELETE,
+    /** Entity creation or draft submission was rejected. */
+    REJECTED
 }

@@ -1,6 +1,5 @@
 package gasi.gps.core.starter.infrastructure.crypto;
 
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
@@ -9,9 +8,7 @@ import jakarta.persistence.Converter;
  * @since 1.0.0
  */
 @Converter
-public class EncryptedStringConverter implements AttributeConverter<String, String> {
-
-    private static volatile FieldEncryptor fieldEncryptor;
+public class EncryptedStringConverter extends AbstractEncryptedAttributeConverter<String> {
 
     /**
      * Creates a JPA encrypted string converter.
@@ -19,24 +16,13 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
     public EncryptedStringConverter() {
     }
 
-    static void configure(FieldEncryptor encryptor) {
-        fieldEncryptor = encryptor;
+    @Override
+    protected String serialize(String attribute) {
+        return attribute;
     }
 
     @Override
-    public String convertToDatabaseColumn(String attribute) {
-        return encryptor().encrypt(attribute);
-    }
-
-    @Override
-    public String convertToEntityAttribute(String dbData) {
-        return encryptor().decrypt(dbData);
-    }
-
-    private static FieldEncryptor encryptor() {
-        if (fieldEncryptor == null) {
-            throw new FieldEncryptionException("Field encryption is not initialized");
-        }
-        return fieldEncryptor;
+    protected String deserialize(String value) {
+        return value;
     }
 }

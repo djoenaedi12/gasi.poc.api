@@ -5,9 +5,11 @@ import gasi.gps.core.api.domain.model.BaseModel;
 /**
  * Generic MapStruct contract for full CRUD DTO mappings.
  *
- * <p>This mapper extends {@link BaseReadDtoMapper} for summary and detail
+ * <p>
+ * This mapper extends {@link BaseReadDtoMapper} for summary and detail
  * response conversions, then adds create and update request mappings for full
- * CRUD resources.</p>
+ * CRUD resources.
+ * </p>
  *
  * @param <D>   domain model type
  * @param <CRQ> create request DTO type
@@ -45,4 +47,27 @@ public interface BaseDtoMapper<D extends BaseModel, CRQ, URQ, SRS, DRS>
      */
     @IgnoreAuditFields
     void updateDomain(URQ updateRequest, @org.mapstruct.MappingTarget D domain);
+
+    /**
+     * Clones an existing domain model into a new domain model.
+     *
+     * @param source existing domain model to clone
+     * @return cloned domain model
+     */
+    @IgnoreAuditFields
+    D cloneDomain(D source);
+
+    /**
+     * Copies values from one domain model into an existing domain model.
+     *
+     * <p>
+     * This method is commonly used to apply an approved pending update record
+     * into its active source record.
+     * </p>
+     *
+     * @param source source domain model
+     * @param target target domain model to mutate
+     */
+    @IgnoreAuditFields
+    void copyDomain(D source, @org.mapstruct.MappingTarget D target);
 }

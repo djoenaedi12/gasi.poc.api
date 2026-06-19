@@ -3,6 +3,7 @@ package gasi.gps.core.api.domain.model;
 import java.time.Instant;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -28,7 +29,8 @@ public abstract class BaseModel {
     private String createdBy;
     private String updatedBy;
     private Long sourceId;
-    private LifecycleStatus lifecycleStatus;
+    @Builder.Default
+    private LifecycleStatus lifecycleStatus = LifecycleStatus.ACTIVE;
     private Integer version;
     private Long uploadId;
 

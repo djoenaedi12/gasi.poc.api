@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import gasi.gps.core.api.domain.model.BaseModel;
 import gasi.gps.core.api.domain.port.inbound.BaseService;
+import gasi.gps.core.api.application.hook.ResourceControllerHook;
 import gasi.gps.core.api.presentation.dto.ApiResponse;
+import gasi.gps.core.starter.application.hook.ResourceControllerHookRegistry;
 import gasi.gps.core.starter.infrastructure.util.IdEncoder;
 import jakarta.validation.Valid;
 
@@ -84,14 +86,16 @@ public abstract class BaseController<D extends BaseModel, CRQ, URQ, SRS, DRS>
     private final BaseService<D, CRQ, URQ, SRS, DRS> service;
 
     /**
-     * Constructs a new {@code BaseController}.
+     * Constructs a new {@code BaseController} with ordered controller hooks.
      *
-     * @param service   the service handling business logic
-     * @param idEncoder the ID encoder for encoding/decoding IDs
+     * @param service      the service handling business logic
+     * @param idEncoder    the ID encoder for encoding/decoding IDs
+     * @param hookRegistry registry for generated and custom controller hooks
      */
     protected BaseController(BaseService<D, CRQ, URQ, SRS, DRS> service,
-            IdEncoder idEncoder) {
-        super(service, idEncoder);
+            IdEncoder idEncoder,
+            ResourceControllerHookRegistry hookRegistry) {
+        super(service, idEncoder, hookRegistry);
         this.service = service;
     }
 
@@ -114,7 +118,11 @@ public abstract class BaseController<D extends BaseModel, CRQ, URQ, SRS, DRS>
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasPermission(this, 'CREATE')")
     public ApiResponse<DRS> create(@Valid @RequestBody CRQ request) {
-        return ApiResponse.ok(service.create(request));
+        ResourceControllerHook<CRQ, URQ, SRS, DRS> hook = controllerHook();
+        hook.beforeCreateRequest(request);
+        ApiResponse<DRS> response = ApiResponse.ok(service.create(request));
+        hook.afterCreateResponse(response, request);
+        return response;
     }
 
     /**
@@ -127,7 +135,11 @@ public abstract class BaseController<D extends BaseModel, CRQ, URQ, SRS, DRS>
     @PutMapping("/{id}")
     @PreAuthorize("hasPermission(this, 'UPDATE')")
     public ApiResponse<DRS> update(@PathVariable String id, @Valid @RequestBody URQ request) {
-        return ApiResponse.ok(service.update(getIdEncoder().decode(id), request));
+        ResourceControllerHook<CRQ, URQ, SRS, DRS> hook = controllerHook();
+        hook.beforeUpdateRequest(id, request);
+        ApiResponse<DRS> response = ApiResponse.ok(service.update(getIdEncoder().decode(id), request));
+        hook.afterUpdateResponse(response, id, request);
+        return response;
     }
 
     /**
@@ -140,7 +152,11 @@ public abstract class BaseController<D extends BaseModel, CRQ, URQ, SRS, DRS>
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasPermission(this, 'DELETE')")
     public ApiResponse<Void> delete(@PathVariable String id) {
+        ResourceControllerHook<CRQ, URQ, SRS, DRS> hook = controllerHook();
+        hook.beforeDeleteRequest(id);
         service.delete(getIdEncoder().decode(id));
-        return ApiResponse.noContent();
+        ApiResponse<Void> response = ApiResponse.noContent();
+        hook.afterDeleteResponse(response, id);
+        return response;
     }
 }

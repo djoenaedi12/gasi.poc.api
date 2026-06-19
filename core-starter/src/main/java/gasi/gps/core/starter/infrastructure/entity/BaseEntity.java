@@ -18,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -70,12 +71,14 @@ public abstract class BaseEntity {
     private String updatedBy;
 
     @Column(name = "source_id")
+    @Filterable
     private Long sourceId;
 
     @Enumerated(EnumType.ORDINAL)
     @Column(name = "lifecycle_status")
     @Filterable
-    private LifecycleStatus lifecycleStatus;
+    @Builder.Default
+    private LifecycleStatus lifecycleStatus = LifecycleStatus.ACTIVE;
 
     @Version
     @Column(name = "version")

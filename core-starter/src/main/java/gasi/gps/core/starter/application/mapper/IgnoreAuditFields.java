@@ -8,9 +8,11 @@ import org.mapstruct.Mapping;
 /**
  * MapStruct meta-annotation that protects common domain audit fields.
  *
- * <p>Use this on create/update mapper methods so request payloads cannot
+ * <p>
+ * Use this on create/update mapper methods so request payloads cannot
  * overwrite IDs, audit metadata, lifecycle state, or optimistic locking
- * values.</p>
+ * values.
+ * </p>
  *
  * @since 1.0.0
  */
@@ -21,6 +23,7 @@ import org.mapstruct.Mapping;
 @Mapping(target = "createdBy", ignore = true)
 @Mapping(target = "updatedBy", ignore = true)
 @Mapping(target = "version", ignore = true)
+@Mapping(target = "uploadId", ignore = true)
 @Mapping(target = "sourceId", ignore = true)
 @Mapping(target = "lifecycleStatus", ignore = true)
 public @interface IgnoreAuditFields {

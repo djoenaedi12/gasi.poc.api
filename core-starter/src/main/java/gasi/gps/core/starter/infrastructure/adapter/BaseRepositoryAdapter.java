@@ -19,6 +19,8 @@ import gasi.gps.core.api.domain.model.PageResult;
 import gasi.gps.core.api.domain.model.SimpleFilter;
 import gasi.gps.core.api.domain.model.SortOrder;
 import gasi.gps.core.api.domain.port.outbound.BaseRepositoryPort;
+import gasi.gps.core.api.application.hook.ResourceRepositoryHook;
+import gasi.gps.core.starter.application.hook.ResourceRepositoryHookRegistry;
 import gasi.gps.core.starter.infrastructure.entity.BaseEntity;
 import gasi.gps.core.starter.infrastructure.filter.FilterableFieldResolver;
 import gasi.gps.core.starter.infrastructure.mapper.BaseMapper;
@@ -43,39 +45,27 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
     private final JpaSpecificationExecutor<E> specExecutor;
     private final BaseMapper<D, E> mapper;
     private final Class<E> entityClass;
+    private final ResourceRepositoryHookRegistry hookRegistry;
 
     /**
-     * Creates an adapter and resolves the entity class from generic metadata.
+     * Creates an adapter with an explicit entity class and ordered repository hooks.
      *
-     * @param repository Spring Data repository implementing JPA and specification
-     *                   contracts
-     * @param mapper     mapper between domain model and JPA entity
-     * @param <R>        repository type
-     */
-    protected <R extends JpaRepository<E, Long> & JpaSpecificationExecutor<E>> BaseRepositoryAdapter(R repository,
-            BaseMapper<D, E> mapper) {
-        this(repository, mapper, null);
-    }
-
-    /**
-     * Creates an adapter with an explicit entity class.
-     *
-     * <p>Use this constructor when the entity class cannot be resolved from
-     * generic metadata, for example through an intermediate abstract adapter.</p>
-     *
-     * @param repository  Spring Data repository implementing JPA and specification
-     *                    contracts
-     * @param mapper      mapper between domain model and JPA entity
-     * @param entityClass JPA entity class
-     * @param <R>         repository type
+     * @param repository   Spring Data repository implementing JPA and specification
+     *                     contracts
+     * @param mapper       mapper between domain model and JPA entity
+     * @param entityClass  JPA entity class
+     * @param hookRegistry registry for generated and custom repository hooks
+     * @param <R>          repository type
      */
     protected <R extends JpaRepository<E, Long> & JpaSpecificationExecutor<E>> BaseRepositoryAdapter(R repository,
             BaseMapper<D, E> mapper,
-            Class<E> entityClass) {
+            Class<E> entityClass,
+            ResourceRepositoryHookRegistry hookRegistry) {
         this.jpaRepository = repository;
         this.specExecutor = repository;
         this.mapper = mapper;
         this.entityClass = entityClass != null ? entityClass : resolveEntityClass();
+        this.hookRegistry = hookRegistry;
     }
 
     /**
@@ -89,19 +79,27 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
 
     @Override
     public D save(D model) {
-        E entity = mapper.toEntity(model);
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        D modelToSave = hook.beforeSave(model);
+        E entity = mapper.toEntity(modelToSave);
         E saved = jpaRepository.save(entity);
-        return mapper.toDomain(saved);
+        D result = mapper.toDomain(saved);
+        hook.afterSave(result);
+        return result;
     }
 
     @Override
     public List<D> saveAll(List<D> models) {
-        List<E> entities = models.stream()
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        List<D> modelsToSave = hook.beforeSaveAll(models);
+        List<E> entities = modelsToSave.stream()
                 .map(mapper::toEntity)
                 .toList();
-        return jpaRepository.saveAll(entities).stream()
+        List<D> result = jpaRepository.saveAll(entities).stream()
                 .map(mapper::toDomain)
                 .toList();
+        hook.afterSaveAll(result);
+        return result;
     }
 
     // ── Find single ───────────────────────────────────────
@@ -113,12 +111,16 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
 
     @Override
     public Optional<D> findById(Long id, boolean useRecordRule) {
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        hook.beforeFindById(id);
         GenericFilter idFilter = SimpleFilter.builder()
                 .field("id")
                 .operator(SimpleFilter.FilterOperator.EQUALS)
                 .value(id)
                 .build();
-        return findBy(idFilter, useRecordRule);
+        Optional<D> result = findByInternal(idFilter, useRecordRule);
+        hook.afterFindById(result, id);
+        return result;
     }
 
     @Override
@@ -128,9 +130,11 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
 
     @Override
     public Optional<D> findBy(GenericFilter filter, boolean useRecordRule) {
-        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(filter) : filter;
-        Specification<E> spec = GenericSpecification.from(effectiveFilter);
-        return specExecutor.findOne(spec).map(mapper::toDomain);
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        GenericFilter hookFilter = hook.beforeFindBy(filter);
+        Optional<D> result = findByInternal(hookFilter, useRecordRule);
+        hook.afterFindBy(result, hookFilter);
+        return result;
     }
 
     // ── Find all ──────────────────────────────────────────
@@ -142,12 +146,16 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
 
     @Override
     public List<D> findAll(GenericFilter filter, List<SortOrder> orders, boolean useRecordRule) {
-        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(filter) : filter;
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        GenericFilter hookFilter = hook.beforeFindAll(filter, orders);
+        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(hookFilter) : hookFilter;
         Specification<E> spec = toSpec(effectiveFilter);
         Sort sort = toSort(orders);
-        return specExecutor.findAll(spec, sort).stream()
+        List<D> result = specExecutor.findAll(spec, sort).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+        hook.afterFindAll(result, hookFilter, orders);
+        return result;
     }
 
     // ── Find all with pagination ──────────────────────────
@@ -160,7 +168,9 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
     @Override
     public PageResult<D> findAll(int page, int size, GenericFilter filter, List<SortOrder> orders,
             boolean useRecordRule) {
-        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(filter) : filter;
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        GenericFilter hookFilter = hook.beforeFindAllPaged(page, size, filter, orders);
+        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(hookFilter) : hookFilter;
         Specification<E> spec = toSpec(effectiveFilter);
         PageRequest pageable = PageRequest.of(page, size, toSort(orders));
         Page<E> result = specExecutor.findAll(spec, pageable);
@@ -169,28 +179,36 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
 
-        return PageResult.<D>builder()
+        PageResult<D> pageResult = PageResult.<D>builder()
                 .content(content)
                 .page(result.getNumber())
                 .size(result.getSize())
                 .totalElements(result.getTotalElements())
                 .totalPages(result.getTotalPages())
                 .build();
+        hook.afterFindAllPaged(pageResult, page, size, hookFilter, orders);
+        return pageResult;
     }
 
     // ── Delete ────────────────────────────────────────────
 
     @Override
     public void delete(Long id) {
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        hook.beforeDelete(id);
         jpaRepository.deleteById(id);
+        hook.afterDelete(id);
     }
 
     @Override
     public void deleteAllByIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        List<Long> idsToDelete = hook.beforeDeleteAllByIds(ids);
+        if (idsToDelete == null || idsToDelete.isEmpty()) {
             return;
         }
-        jpaRepository.deleteAllById(ids);
+        jpaRepository.deleteAllById(idsToDelete);
+        hook.afterDeleteAllByIds(idsToDelete);
     }
 
     @Override
@@ -204,7 +222,9 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
             throw new IllegalArgumentException("GenericFilter must not be null for bulk delete");
         }
 
-        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(filter) : filter;
+        ResourceRepositoryHook<D> hook = repositoryHook();
+        GenericFilter hookFilter = hook.beforeDeleteAllBy(filter);
+        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(hookFilter) : hookFilter;
         Specification<E> spec = toSpec(effectiveFilter);
         List<E> entities = specExecutor.findAll(spec);
 
@@ -213,6 +233,13 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
         }
 
         jpaRepository.deleteAllInBatch(entities);
+        hook.afterDeleteAllBy(hookFilter);
+    }
+
+    private Optional<D> findByInternal(GenericFilter filter, boolean useRecordRule) {
+        GenericFilter effectiveFilter = useRecordRule ? applyRecordRules(filter) : filter;
+        Specification<E> spec = GenericSpecification.from(effectiveFilter);
+        return specExecutor.findOne(spec).map(mapper::toDomain);
     }
 
     // ── Record Rules ─────────────────────────────────────
@@ -262,6 +289,13 @@ public abstract class BaseRepositoryAdapter<D extends BaseModel, E extends BaseE
 
     private Sort.Order defaultIdOrder() {
         return Sort.Order.asc("id");
+    }
+
+    private ResourceRepositoryHook<D> repositoryHook() {
+        if (hookRegistry == null) {
+            return ResourceRepositoryHook.noop();
+        }
+        return hookRegistry.resolve(resourceType());
     }
 
     @SuppressWarnings("unchecked")
