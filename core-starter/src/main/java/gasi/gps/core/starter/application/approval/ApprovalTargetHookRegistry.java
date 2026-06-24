@@ -38,7 +38,7 @@ public class ApprovalTargetHookRegistry {
      * @param data         approved and activated data
      */
     public void afterCreateApproved(String resourceType, BaseModel data) {
-        matchingHooks(resourceType).forEach(hook -> hook.afterCreateApproved(data));
+        matchingHooks(resourceType).forEach(hook -> hook.afterCreateApproved(resourceType, data));
     }
 
     /**
@@ -48,7 +48,7 @@ public class ApprovalTargetHookRegistry {
      * @param data         rejected pending data
      */
     public void afterCreateRejected(String resourceType, BaseModel data) {
-        matchingHooks(resourceType).forEach(hook -> hook.afterCreateRejected(data));
+        matchingHooks(resourceType).forEach(hook -> hook.afterCreateRejected(resourceType, data));
     }
 
     /**
@@ -59,7 +59,7 @@ public class ApprovalTargetHookRegistry {
      * @param pendingData  pending data used as the approved change source
      */
     public void afterUpdateApproved(String resourceType, BaseModel activeData, BaseModel pendingData) {
-        matchingHooks(resourceType).forEach(hook -> hook.afterUpdateApproved(activeData, pendingData));
+        matchingHooks(resourceType).forEach(hook -> hook.afterUpdateApproved(resourceType, activeData, pendingData));
     }
 
     /**
@@ -70,7 +70,7 @@ public class ApprovalTargetHookRegistry {
      * @param pendingData  rejected pending update data
      */
     public void afterUpdateRejected(String resourceType, BaseModel pendingData) {
-        matchingHooks(resourceType).forEach(hook -> hook.afterUpdateRejected(pendingData));
+        matchingHooks(resourceType).forEach(hook -> hook.afterUpdateRejected(resourceType, pendingData));
     }
 
     /**
@@ -80,7 +80,7 @@ public class ApprovalTargetHookRegistry {
      * @param data         deleted data
      */
     public void afterDeleteApproved(String resourceType, BaseModel data) {
-        matchingHooks(resourceType).forEach(hook -> hook.afterDeleteApproved(data));
+        matchingHooks(resourceType).forEach(hook -> hook.afterDeleteApproved(resourceType, data));
     }
 
     /**
@@ -90,7 +90,7 @@ public class ApprovalTargetHookRegistry {
      * @param data         active data restored from pending delete flow
      */
     public void afterDeleteRejected(String resourceType, BaseModel data) {
-        matchingHooks(resourceType).forEach(hook -> hook.afterDeleteRejected(data));
+        matchingHooks(resourceType).forEach(hook -> hook.afterDeleteRejected(resourceType, data));
     }
 
     private List<ApprovalTargetHook> matchingHooks(String resourceType) {

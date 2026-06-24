@@ -28,54 +28,60 @@ public interface ApprovalTargetHook extends ExtensionPoint {
      * Called after a pending create request is approved and the pending data is
      * activated.
      *
-     * @param data approved and activated data
+     * @param resourceType resource type
+     * @param data         approved and activated data
      */
-    default void afterCreateApproved(BaseModel data) {
+    default void afterCreateApproved(String resourceType, BaseModel data) {
     }
 
     /**
      * Called after a pending create request is rejected and the pending data is
      * removed.
      *
-     * @param data rejected pending data
+     * @param resourceType resource type
+     * @param data         rejected pending data
      */
-    default void afterCreateRejected(BaseModel data) {
+    default void afterCreateRejected(String resourceType, BaseModel data) {
     }
 
     /**
      * Called after a pending update request is approved and applied to the
      * active data.
      *
-     * @param activeData  active data after the approved change is saved
-     * @param pendingData pending data used as the approved change source
+     * @param resourceType resource type
+     * @param activeData   active data after the approved change is saved
+     * @param pendingData  pending data used as the approved change source
      */
-    default void afterUpdateApproved(BaseModel activeData, BaseModel pendingData) {
+    default void afterUpdateApproved(String resourceType, BaseModel activeData, BaseModel pendingData) {
     }
 
     /**
      * Called after a pending update request is rejected and the pending data is
      * removed.
      *
-     * @param pendingData rejected pending update data
+     * @param resourceType resource type
+     * @param pendingData  rejected pending update data
      */
-    default void afterUpdateRejected(BaseModel pendingData) {
+    default void afterUpdateRejected(String resourceType, BaseModel pendingData) {
     }
 
     /**
      * Called after a pending delete request is approved and the target data is
      * deleted.
      *
-     * @param data deleted data
+     * @param resourceType resource type
+     * @param data         deleted data
      */
-    default void afterDeleteApproved(BaseModel data) {
+    default void afterDeleteApproved(String resourceType, BaseModel data) {
     }
 
     /**
      * Called after a pending delete request is rejected and the target data
      * remains active.
      *
-     * @param data active data restored from pending delete flow
+     * @param resourceType resource type
+     * @param data         active data restored from pending delete flow
      */
-    default void afterDeleteRejected(BaseModel data) {
+    default void afterDeleteRejected(String resourceType, BaseModel data) {
     }
 }

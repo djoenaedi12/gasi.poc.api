@@ -92,10 +92,10 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
     public DRS create(CRQ request, MutationOptions options) {
         ResourceServiceHook<D, CRQ, URQ, SRS, DRS> hook = serviceHook();
         ResourceMapperHook<D, CRQ, URQ, SRS, DRS> mapperHook = mapperHook();
-        hook.beforeCreateRequest(request);
+        hook.beforeCreateRequest(resourceType(), request);
         D domain = mapper.toCreateDomain(request);
         mapperHook.afterToCreateDomain(domain, request);
-        hook.beforeCreate(domain, request);
+        hook.beforeCreate(resourceType(), domain, request);
         boolean approvalRequired = approvalRequired(ApprovalAction.CREATE, options);
         if (approvalRequired) {
             domain.setLifecycleStatus(LifecycleStatus.PENDING_CREATE);
@@ -104,9 +104,9 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
         if (approvalRequired) {
             approvalExtensionRegistry.submitCreate(resourceType(), saved.getId(), saved);
         }
-        hook.afterCreate(saved, request);
+        hook.afterCreate(resourceType(), saved, request);
         DRS response = toDetailResponse(saved);
-        hook.afterCreateResponse(response, saved, request);
+        hook.afterCreateResponse(resourceType(), response, saved, request);
         return response;
     }
 
@@ -114,7 +114,7 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
     public DRS update(Long id, URQ request, MutationOptions options) {
         ResourceServiceHook<D, CRQ, URQ, SRS, DRS> hook = serviceHook();
         ResourceMapperHook<D, CRQ, URQ, SRS, DRS> mapperHook = mapperHook();
-        hook.beforeUpdateRequest(id, request);
+        hook.beforeUpdateRequest(resourceType(), id, request);
         D existing = findRequired(id);
         validateNoPendingApproval(existing);
         if (existing.getLifecycleStatus() == LifecycleStatus.DRAFT
@@ -123,22 +123,22 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
         }
 
         D pending = createPendingUpdate(existing, request, mapperHook);
-        hook.beforeUpdate(pending, request);
+        hook.beforeUpdate(resourceType(), pending, request);
         D saved = repositoryPort.save(pending);
         approvalExtensionRegistry.submitUpdate(resourceType(), id, existing, saved);
-        hook.afterUpdate(saved, request);
+        hook.afterUpdate(resourceType(), saved, request);
         DRS response = toDetailResponse(saved);
-        hook.afterUpdateResponse(response, saved, request);
+        hook.afterUpdateResponse(resourceType(), response, saved, request);
         return response;
     }
 
     @Override
     public void delete(Long id, MutationOptions options) {
         ResourceServiceHook<D, CRQ, URQ, SRS, DRS> hook = serviceHook();
-        hook.beforeDeleteRequest(id);
+        hook.beforeDeleteRequest(resourceType(), id);
         D existing = findRequired(id);
         validateNoPendingApproval(existing);
-        hook.beforeDelete(id);
+        hook.beforeDelete(resourceType(), id);
         if (approvalRequired(ApprovalAction.DELETE, options)) {
             existing.setLifecycleStatus(LifecycleStatus.PENDING_DELETE);
             D saved = repositoryPort.save(existing);
@@ -146,7 +146,7 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
             return;
         }
         repositoryPort.delete(id);
-        hook.afterDelete(id);
+        hook.afterDelete(resourceType(), id);
     }
 
     private DRS updateExisting(D existing, URQ request,
@@ -157,11 +157,11 @@ public abstract class BaseServiceImpl<D extends BaseModel, CRQ, URQ, SRS, DRS>
         if (request instanceof VersionedRequest vr) {
             existing.setVersion(vr.getVersion());
         }
-        hook.beforeUpdate(existing, request);
+        hook.beforeUpdate(resourceType(), existing, request);
         D saved = repositoryPort.save(existing);
-        hook.afterUpdate(saved, request);
+        hook.afterUpdate(resourceType(), saved, request);
         DRS response = toDetailResponse(saved);
-        hook.afterUpdateResponse(response, saved, request);
+        hook.afterUpdateResponse(resourceType(), response, saved, request);
         return response;
     }
 

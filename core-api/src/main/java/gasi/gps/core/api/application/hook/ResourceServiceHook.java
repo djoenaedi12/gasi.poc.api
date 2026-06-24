@@ -29,170 +29,194 @@ public interface ResourceServiceHook<D extends BaseModel, CRQ, URQ, SRS, DRS> {
     /**
      * Called at the beginning of find-by-id.
      *
-     * @param id internal database identifier
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param id           internal database identifier
      */
-    default void beforeFindById(Long id) {
+    default void beforeFindById(String resourceType, Long id) {
     }
 
     /**
      * Called after find-by-id has been mapped and enriched.
      *
-     * @param response detail response that will be returned
-     * @param domain   loaded domain object
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param response     detail response that will be returned
+     * @param domain       loaded domain object
      */
-    default void afterFindByIdResponse(DRS response, D domain) {
+    default void afterFindByIdResponse(String resourceType, DRS response, D domain) {
     }
 
     /**
      * Called at the beginning of find-by-filter.
      *
-     * @param filter filter expression
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param filter       filter expression
      */
-    default void beforeFindBy(GenericFilter filter) {
+    default void beforeFindBy(String resourceType, GenericFilter filter) {
     }
 
     /**
      * Called after find-by-filter has been mapped and enriched.
      *
-     * @param response detail response that will be returned
-     * @param domain   loaded domain object
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param response     detail response that will be returned
+     * @param domain       loaded domain object
      */
-    default void afterFindByResponse(DRS response, D domain) {
+    default void afterFindByResponse(String resourceType, DRS response, D domain) {
     }
 
     /**
      * Called at the beginning of find-all.
      *
-     * @param filter filter expression
-     * @param orders sort orders
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param filter       filter expression
+     * @param orders       sort orders
      */
-    default void beforeFindAll(GenericFilter filter, List<SortOrder> orders) {
+    default void beforeFindAll(String resourceType, GenericFilter filter, List<SortOrder> orders) {
     }
 
     /**
      * Called after find-all has been mapped.
      *
-     * @param response summary responses that will be returned
-     * @param domains  loaded domain objects
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param response     summary responses that will be returned
+     * @param domains      loaded domain objects
      */
-    default void afterFindAllResponse(List<SRS> response, List<D> domains) {
+    default void afterFindAllResponse(String resourceType, List<SRS> response, List<D> domains) {
     }
 
     /**
      * Called at the beginning of paged find-all.
      *
-     * @param page   zero-based page index
-     * @param size   requested page size
-     * @param filter filter expression
-     * @param orders sort orders
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param page         zero-based page index
+     * @param size         requested page size
+     * @param filter       filter expression
+     * @param orders       sort orders
      */
-    default void beforeFindAllPaged(int page, int size, GenericFilter filter, List<SortOrder> orders) {
+    default void beforeFindAllPaged(
+            String resourceType,
+            int page,
+            int size,
+            GenericFilter filter,
+            List<SortOrder> orders) {
     }
 
     /**
      * Called after paged find-all has been mapped.
      *
-     * @param response page response that will be returned
-     * @param domains  loaded domain page
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param response     page response that will be returned
+     * @param domains      loaded domain page
      */
-    default void afterFindAllPagedResponse(PageResult<SRS> response, PageResult<D> domains) {
+    default void afterFindAllPagedResponse(String resourceType, PageResult<SRS> response, PageResult<D> domains) {
     }
 
     /**
      * Called at the beginning of create, before request-to-domain mapping.
      *
-     * @param request create request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param request      create request payload
      */
-    default void beforeCreateRequest(CRQ request) {
+    default void beforeCreateRequest(String resourceType, CRQ request) {
     }
 
     /**
      * Called after create DTO is mapped to domain, before save.
      *
-     * @param domain  newly mapped domain object
-     * @param request create request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param domain       newly mapped domain object
+     * @param request      create request payload
      */
-    default void beforeCreate(D domain, CRQ request) {
+    default void beforeCreate(String resourceType, D domain, CRQ request) {
     }
 
     /**
      * Called after the entity is saved on create.
      *
-     * @param saved   persisted domain object
-     * @param request create request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param saved        persisted domain object
+     * @param request      create request payload
      */
-    default void afterCreate(D saved, CRQ request) {
+    default void afterCreate(String resourceType, D saved, CRQ request) {
     }
 
     /**
      * Called after create has been saved and mapped to a detail response.
      *
-     * @param response detail response that will be returned
-     * @param saved    persisted domain object
-     * @param request  create request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param response     detail response that will be returned
+     * @param saved        persisted domain object
+     * @param request      create request payload
      */
-    default void afterCreateResponse(DRS response, D saved, CRQ request) {
+    default void afterCreateResponse(String resourceType, DRS response, D saved, CRQ request) {
     }
 
     /**
      * Called at the beginning of update, before loading and mapping the entity.
      *
-     * @param id      internal database identifier
-     * @param request update request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param id           internal database identifier
+     * @param request      update request payload
      */
-    default void beforeUpdateRequest(Long id, URQ request) {
+    default void beforeUpdateRequest(String resourceType, Long id, URQ request) {
     }
 
     /**
      * Called after update DTO is merged into existing domain, before save.
      *
-     * @param domain  existing domain object with updates applied
-     * @param request update request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param domain       existing domain object with updates applied
+     * @param request      update request payload
      */
-    default void beforeUpdate(D domain, URQ request) {
+    default void beforeUpdate(String resourceType, D domain, URQ request) {
     }
 
     /**
      * Called after the entity is saved on update.
      *
-     * @param saved   persisted domain object
-     * @param request update request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param saved        persisted domain object
+     * @param request      update request payload
      */
-    default void afterUpdate(D saved, URQ request) {
+    default void afterUpdate(String resourceType, D saved, URQ request) {
     }
 
     /**
      * Called after update has been saved and mapped to a detail response.
      *
-     * @param response detail response that will be returned
-     * @param saved    persisted domain object
-     * @param request  update request payload
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param response     detail response that will be returned
+     * @param saved        persisted domain object
+     * @param request      update request payload
      */
-    default void afterUpdateResponse(DRS response, D saved, URQ request) {
+    default void afterUpdateResponse(String resourceType, DRS response, D saved, URQ request) {
     }
 
     /**
      * Called at the beginning of delete, before loading the entity.
      *
-     * @param id internal database identifier
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param id           internal database identifier
      */
-    default void beforeDeleteRequest(Long id) {
+    default void beforeDeleteRequest(String resourceType, Long id) {
     }
 
     /**
      * Called before the entity is deleted.
      *
-     * @param id internal database identifier
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param id           internal database identifier
      */
-    default void beforeDelete(Long id) {
+    default void beforeDelete(String resourceType, Long id) {
     }
 
     /**
      * Called after the entity is deleted.
      *
-     * @param id internal database identifier
+     * @param resourceType resource type, usually {@code resourceType()}
+     * @param id           internal database identifier
      */
-    default void afterDelete(Long id) {
+    default void afterDelete(String resourceType, Long id) {
     }
 
     /**
@@ -239,98 +263,106 @@ public interface ResourceServiceHook<D extends BaseModel, CRQ, URQ, SRS, DRS> {
         }
         return new ResourceServiceHook<>() {
             @Override
-            public void beforeFindById(Long id) {
-                delegates.forEach(hook -> hook.beforeFindById(id));
+            public void beforeFindById(String resourceType, Long id) {
+                delegates.forEach(hook -> hook.beforeFindById(resourceType, id));
             }
 
             @Override
-            public void afterFindByIdResponse(DRS response, D domain) {
-                delegates.forEach(hook -> hook.afterFindByIdResponse(response, domain));
+            public void afterFindByIdResponse(String resourceType, DRS response, D domain) {
+                delegates.forEach(hook -> hook.afterFindByIdResponse(resourceType, response, domain));
             }
 
             @Override
-            public void beforeFindBy(GenericFilter filter) {
-                delegates.forEach(hook -> hook.beforeFindBy(filter));
+            public void beforeFindBy(String resourceType, GenericFilter filter) {
+                delegates.forEach(hook -> hook.beforeFindBy(resourceType, filter));
             }
 
             @Override
-            public void afterFindByResponse(DRS response, D domain) {
-                delegates.forEach(hook -> hook.afterFindByResponse(response, domain));
+            public void afterFindByResponse(String resourceType, DRS response, D domain) {
+                delegates.forEach(hook -> hook.afterFindByResponse(resourceType, response, domain));
             }
 
             @Override
-            public void beforeFindAll(GenericFilter filter, List<SortOrder> orders) {
-                delegates.forEach(hook -> hook.beforeFindAll(filter, orders));
+            public void beforeFindAll(String resourceType, GenericFilter filter, List<SortOrder> orders) {
+                delegates.forEach(hook -> hook.beforeFindAll(resourceType, filter, orders));
             }
 
             @Override
-            public void afterFindAllResponse(List<SRS> response, List<D> domains) {
-                delegates.forEach(hook -> hook.afterFindAllResponse(response, domains));
+            public void afterFindAllResponse(String resourceType, List<SRS> response, List<D> domains) {
+                delegates.forEach(hook -> hook.afterFindAllResponse(resourceType, response, domains));
             }
 
             @Override
-            public void beforeFindAllPaged(int page, int size, GenericFilter filter, List<SortOrder> orders) {
-                delegates.forEach(hook -> hook.beforeFindAllPaged(page, size, filter, orders));
+            public void beforeFindAllPaged(
+                    String resourceType,
+                    int page,
+                    int size,
+                    GenericFilter filter,
+                    List<SortOrder> orders) {
+                delegates.forEach(hook -> hook.beforeFindAllPaged(resourceType, page, size, filter, orders));
             }
 
             @Override
-            public void afterFindAllPagedResponse(PageResult<SRS> response, PageResult<D> domains) {
-                delegates.forEach(hook -> hook.afterFindAllPagedResponse(response, domains));
+            public void afterFindAllPagedResponse(
+                    String resourceType,
+                    PageResult<SRS> response,
+                    PageResult<D> domains) {
+                delegates.forEach(hook -> hook.afterFindAllPagedResponse(resourceType, response, domains));
             }
 
             @Override
-            public void beforeCreateRequest(CRQ request) {
-                delegates.forEach(hook -> hook.beforeCreateRequest(request));
+            public void beforeCreateRequest(String resourceType, CRQ request) {
+                delegates.forEach(hook -> hook.beforeCreateRequest(resourceType, request));
             }
 
             @Override
-            public void beforeCreate(D domain, CRQ request) {
-                delegates.forEach(hook -> hook.beforeCreate(domain, request));
+            public void beforeCreate(String resourceType, D domain, CRQ request) {
+                delegates.forEach(hook -> hook.beforeCreate(resourceType, domain, request));
             }
 
             @Override
-            public void afterCreate(D saved, CRQ request) {
-                delegates.forEach(hook -> hook.afterCreate(saved, request));
+            public void afterCreate(String resourceType, D saved, CRQ request) {
+                delegates.forEach(hook -> hook.afterCreate(resourceType, saved, request));
             }
 
             @Override
-            public void afterCreateResponse(DRS response, D saved, CRQ request) {
-                delegates.forEach(hook -> hook.afterCreateResponse(response, saved, request));
+            public void afterCreateResponse(String resourceType, DRS response, D saved, CRQ request) {
+                delegates.forEach(hook -> hook.afterCreateResponse(resourceType, response, saved, request));
             }
 
             @Override
-            public void beforeUpdateRequest(Long id, URQ request) {
-                delegates.forEach(hook -> hook.beforeUpdateRequest(id, request));
+            public void beforeUpdateRequest(String resourceType, Long id, URQ request) {
+                delegates.forEach(hook -> hook.beforeUpdateRequest(resourceType, id, request));
             }
 
             @Override
-            public void beforeUpdate(D domain, URQ request) {
-                delegates.forEach(hook -> hook.beforeUpdate(domain, request));
+            public void beforeUpdate(String resourceType, D domain, URQ request) {
+                delegates.forEach(hook -> hook.beforeUpdate(resourceType, domain, request));
             }
 
             @Override
-            public void afterUpdate(D saved, URQ request) {
-                delegates.forEach(hook -> hook.afterUpdate(saved, request));
+            public void afterUpdate(String resourceType, D saved, URQ request) {
+                delegates.forEach(hook -> hook.afterUpdate(resourceType, saved, request));
             }
 
             @Override
-            public void afterUpdateResponse(DRS response, D saved, URQ request) {
-                delegates.forEach(hook -> hook.afterUpdateResponse(response, saved, request));
+            public void afterUpdateResponse(String resourceType, DRS response, D saved, URQ request) {
+                delegates.forEach(hook -> hook.afterUpdateResponse(resourceType, response, saved, request));
             }
 
             @Override
-            public void beforeDeleteRequest(Long id) {
-                delegates.forEach(hook -> hook.beforeDeleteRequest(id));
+            public void beforeDeleteRequest(String resourceType, Long id) {
+                delegates.forEach(hook -> hook.beforeDeleteRequest(resourceType, id));
             }
 
             @Override
-            public void beforeDelete(Long id) {
-                delegates.forEach(hook -> hook.beforeDelete(id));
+            public void beforeDelete(String resourceType, Long id) {
+                delegates.forEach(hook -> hook.beforeDelete(resourceType, id));
             }
 
             @Override
-            public void afterDelete(Long id) {
-                delegates.forEach(hook -> hook.afterDelete(id));
+            public void afterDelete(String resourceType, Long id) {
+                delegates.forEach(hook -> hook.afterDelete(resourceType, id));
             }
         };
     }

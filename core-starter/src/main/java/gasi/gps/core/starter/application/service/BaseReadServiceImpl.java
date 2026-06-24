@@ -84,43 +84,43 @@ public abstract class BaseReadServiceImpl<D extends BaseModel, SRS, DRS>
     @Override
     public DRS findById(Long id) {
         ResourceServiceHook<D, Object, Object, SRS, DRS> hook = serviceHook();
-        hook.beforeFindById(id);
+        hook.beforeFindById(resourceType(), id);
         D domain = repositoryPort.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageUtil.get("error.entity.notFound", resourceType(), idEncoder.encode(id))));
         DRS response = toDetailResponse(domain);
-        hook.afterFindByIdResponse(response, domain);
+        hook.afterFindByIdResponse(resourceType(), response, domain);
         return response;
     }
 
     @Override
     public DRS findBy(GenericFilter filter) {
         ResourceServiceHook<D, Object, Object, SRS, DRS> hook = serviceHook();
-        hook.beforeFindBy(filter);
+        hook.beforeFindBy(resourceType(), filter);
         D domain = repositoryPort.findBy(filter)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageUtil.get("error.entity.notFound", resourceType(), "filter")));
         DRS response = toDetailResponse(domain);
-        hook.afterFindByResponse(response, domain);
+        hook.afterFindByResponse(resourceType(), response, domain);
         return response;
     }
 
     @Override
     public List<SRS> findAll(GenericFilter filter, List<SortOrder> orders) {
         ResourceServiceHook<D, Object, Object, SRS, DRS> hook = serviceHook();
-        hook.beforeFindAll(filter, orders);
+        hook.beforeFindAll(resourceType(), filter, orders);
         List<D> result = repositoryPort.findAll(filter, orders);
         List<SRS> response = result.stream()
                 .map(this::toSummaryResponse)
                 .collect(Collectors.toList());
-        hook.afterFindAllResponse(response, result);
+        hook.afterFindAllResponse(resourceType(), response, result);
         return response;
     }
 
     @Override
     public PageResult<SRS> findAll(int page, int size, GenericFilter filter, List<SortOrder> orders) {
         ResourceServiceHook<D, Object, Object, SRS, DRS> hook = serviceHook();
-        hook.beforeFindAllPaged(page, size, filter, orders);
+        hook.beforeFindAllPaged(resourceType(), page, size, filter, orders);
         PageResult<D> result = repositoryPort.findAll(page, size, filter, orders);
         List<SRS> content = result.getContent().stream()
                 .map(this::toSummaryResponse)
@@ -132,7 +132,7 @@ public abstract class BaseReadServiceImpl<D extends BaseModel, SRS, DRS>
                 .totalElements(result.getTotalElements())
                 .totalPages(result.getTotalPages())
                 .build();
-        hook.afterFindAllPagedResponse(response, result);
+        hook.afterFindAllPagedResponse(resourceType(), response, result);
         return response;
     }
 
