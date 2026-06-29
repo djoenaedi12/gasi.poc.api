@@ -1,141 +1,126 @@
-# Spring Modular PF4J
+# GASI API
 
-Unified **Spring Boot** application menggunakan [PF4J](https://pf4j.org/) sebagai plugin framework. Setiap domain fitur dikemas sebagai plugin yang dapat di-deploy secara independen tanpa recompile aplikasi utama.
+GASI API is a modular backend built with Spring Boot and PF4J. The platform is organized around a host application, shared core modules, and feature plugins that can be packaged and loaded as PF4J plugin JARs.
 
----
+Use this README as the entry point. Module-specific details live closer to the code:
 
-## Struktur Project
-
-```
-spring-modular-pf4j/
-├── pom.xml                  # Parent POM (Maven Multi-Module)
-├── core-api/                # Kontrak murni: interfaces, extension points, base DTOs
-├── core-starter/            # Spring Boot starter library untuk semua plugin
-├── platform-app/            # Spring Boot host application
-│   └── plugins/             # Folder runtime JAR plugin
-├── plugins/                 # Source semua plugin
-│   ├── auth-plugin/
-│   ├── audit-plugin/
-│   ├── ldap-plugin/
-│   └── payroll-plugin/
-└── gasi-cli/                # CLI tooling untuk scaffold plugin baru
-```
-
-### Alur Plugin Loading
-
-```
-┌──────────────────┐  depends on  ┌──────────────┐  ┌────────────────┐
-│   platform-app   │ ────────────▶│   core-api   │  │  core-starter  │
-└──────┬───────────┘              └──────▲───────┘  └───────▲────────┘
-       │ loads JAR from /plugins         │                   │
-       ▼                          depends on (provided scope, via host classloader)
-┌──────────────────┐   ┌────────────────┐   ┌──────────────────┐
-│  auth-plugin     │   │  audit-plugin  │   │  payroll-plugin  │
-│  (JAR plugin)    │   │  (JAR plugin)  │   │  (JAR plugin)    │
-└──────────────────┘   └────────────────┘   └──────────────────┘
-```
-
-1. **`core-api`** — Layer kontrak murni: extension points, base model, base DTO, base repository port, base mapper. Tidak boleh depend ke modul lain.
-2. **`core-starter`** — Spring Boot starter yang menyediakan auto-configuration dan base beans untuk semua plugin.
-3. **`platform-app`** — Host application Spring Boot. Saat startup, memuat semua plugin JAR dari `plugins/`, menggabungkan classloader, lalu menjalankan Spring context.
-4. **`plugins/`** — Berisi semua plugin domain. Setiap plugin mengikuti Clean Architecture dengan layer `application`, `domain`, `infrastructure`, dan `presentation`.
-5. **`gasi-cli`** — CLI tooling untuk scaffold plugin baru secara konsisten.
-
----
+- [core-api](core-api/README.md): shared contracts, DTOs, ports, extension points, and hook interfaces.
+- [core-starter](core-starter/README.md): reusable Spring implementations, base CRUD flow, registries, filtering, mapping, and hook execution.
+- [platform-app](platform-app/README.md): executable host application, plugin loading, runtime configuration, Flyway, i18n, and troubleshooting.
 
 ## Tech Stack
 
-| Komponen        | Versi           |
-|-----------------|-----------------|
-| Java            | 25              |
-| Spring Boot     | 4.0.3           |
-| PF4J            | 3.15.0          |
-| PF4J Spring     | 0.10.0          |
-| Database        | MariaDB 11.8    |
-| Migration       | Flyway          |
-| ORM Mapper      | MapStruct 1.6.3 |
-| Code Generation | Lombok          |
-| ID Obfuscation  | Sqids 0.1.0     |
-| Build Tool      | Maven           |
+| Area | Technology |
+| --- | --- |
+| Language | Java 25 |
+| Framework | Spring Boot 4.0.3 |
+| Build | Maven multi-module |
+| Plugin runtime | PF4J 3.15.0, PF4J Spring 0.10.0 |
+| Database | MariaDB |
+| Migration | Flyway |
+| Persistence | Spring Data JPA |
+| Mapper | MapStruct 1.6.3 |
+| Boilerplate | Lombok |
+| Cache | Spring Cache + Caffeine |
+| Quality checks | JaCoCo, Checkstyle, SpotBugs, Javadoc |
 
----
+## Example Project Layout
 
-## Getting Started
+This layout is illustrative. The actual repository may evolve as modules and plugins are added, renamed, generated, or moved.
 
-**Prasyarat:** Java 25+, Maven 3.8+, MariaDB, Node.js
+```text
+gasi.poc.api/
+├── pom.xml
+├── core-api/
+├── core-starter/
+├── platform-app/
+├── plugins/
+│   ├── sample-domain-plugin/
+│   └── ...
+├── checkstyle.xml
+├── checkstyle-suppressions.xml
+└── spotbugs-exclude.xml
+```
+
+The parent `pom.xml` is the source of truth for modules included in the default Maven build. Check the `<modules>` section before assuming a plugin is built by `mvn clean package`.
+
+## Runtime Flow
+
+```text
+client
+  |
+  v
+platform-app
+  |-- starts Spring Boot
+  |-- loads PF4J plugin jars
+  |-- scans platform, core-starter, and plugin components
+  |-- combines plugin Flyway migrations and i18n bundles
+  v
+plugin domain modules
+```
+
+`core-api` defines the contracts. `core-starter` provides reusable Spring behavior. `platform-app` runs the application and wires plugin contributions at runtime.
+
+## Prerequisites
+
+- JDK 25
+- Maven 3.9+
+- MariaDB
+
+Quick check:
 
 ```bash
-# Install gasi CLI
-cd gasi-cli && npm install && npm link
+java --version
+mvn --version
+```
 
-# Build & deploy plugin
-gasi plugin build auth
-gasi plugin deploy auth
+## Build
 
-# Jalankan aplikasi dari root project agar dependency module ikut ter-compile
+From the repository root:
+
+```bash
+mvn clean package
+```
+
+Run tests and lifecycle quality checks:
+
+```bash
+mvn clean verify
+```
+
+Build one module with its required internal dependencies:
+
+```bash
+mvn -pl platform-app -am package
+mvn -pl plugins/data-upload-plugin -am package
+```
+
+## Run
+
+Review [platform-app/README.md](platform-app/README.md) for runtime configuration first, especially database settings.
+
+Then run:
+
+```bash
 mvn -pl platform-app -am spring-boot:run
 ```
 
-Sesuaikan datasource, `app.id.salt`, dan CORS di [platform-app/src/main/resources/application.properties](platform-app/src/main/resources/application.properties) sebelum menjalankan.
+Default base URL:
 
-Lihat [gasi-cli/README.md](gasi-cli/README.md) untuk opsi lengkap (skip-tests, profile, dll).
-
----
-
-## Flyway Migration Versioning
-
-Semua migration menggunakan format **datetime** sebagai versi:
-
-```
-V<YYYYMMDDHHmmss>__<deskripsi>.sql
-
-Contoh:
-  V20260306113000__auth_schema_init.sql
-  V20260305210727__create_sequences.sql
+```text
+http://localhost:8080/platform-app
 ```
 
-Pastikan timestamp unik dan monotonically increasing per plugin.
+Platform health endpoint:
 
----
-
-## Konvensi Arsitektur
-
-Setiap plugin mengikuti **Clean Architecture** dengan struktur:
-
-```
-plugins/xxx-plugin/
-└── src/main/java/gasi/gps/<domain>/
-    ├── application/
-    │   ├── dto/            # Request & Response DTO
-    │   ├── mapper/         # MapStruct mapper (application level)
-    │   └── service/        # Use case implementation
-    ├── domain/
-    │   ├── model/          # Domain model (POJO, bukan Entity)
-    │   └── port/
-    │       ├── inbound/    # Service interfaces
-    │       └── outbound/   # Repository port interfaces
-    ├── infrastructure/
-    │   ├── adapter/        # Implementasi repository port
-    │   ├── entity/         # JPA Entity
-    │   ├── mapper/         # MapStruct Entity ↔ Model mapper
-    │   ├── persistence/    # Spring Data JPA Repository interfaces
-    └── presentation/
-        └── controller/     # REST Controller
+```text
+GET http://localhost:8080/platform-app/platform/health
 ```
 
----
+## New Developer Reading Path
 
-## Konvensi Global
-
-Aturan yang berlaku di **semua plugin** tanpa pengecualian:
-
-| Aspek | Aturan |
-|-------|--------|
-| **Public ID** | Sqids (obfuscation), DB tetap pakai integer PK. Response API **tidak boleh** expose raw DB ID. |
-| **ID Encoding di Mapper** | Gunakan `@Named` qualifier untuk `IdEncoder`; role resolution di service layer, bukan mapper. |
-
----
-
-## Membuat Plugin Baru
-
-Gunakan `gasi plugin create` — lihat [gasi-cli/README.md](gasi-cli/README.md) untuk panduan lengkap.
+1. Read this root README.
+2. Read [core-api](core-api/README.md) to understand contracts and extension points.
+3. Read [core-starter](core-starter/README.md) to understand reusable base behavior.
+4. Read [platform-app](platform-app/README.md) to understand startup and runtime wiring.
+5. Read one plugin module end to end to see the domain pattern in practice.
